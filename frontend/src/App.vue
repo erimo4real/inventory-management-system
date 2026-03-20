@@ -8,8 +8,8 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import ToastContainer from '@/components/common/ToastContainer.vue'
-import Loading from '@/views/Loading.vue'
+import ToastContainer from '@/shared/components/ToastContainer.vue'
+import Loading from '@/features/loading/views/Loading.vue'
 
 export default {
   name: 'App',
