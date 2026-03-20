@@ -85,6 +85,12 @@
           <span v-if="!collapsed">Vendors</span>
         </router-link>
         
+        <!-- Reports (Admin/Manager) -->
+        <router-link to="/reports" class="nav-item" :class="{ active: $route.path === '/reports' }">
+          <span class="icon">📋</span>
+          <span v-if="!collapsed">Reports</span>
+        </router-link>
+        
         <!-- Admin only - Users -->
         <router-link v-if="isAdmin" to="/users" class="nav-item" :class="{ active: $route.path === '/users' }">
           <span class="icon">👥</span>
@@ -142,7 +148,8 @@ export default {
         '/users': 'Users',
         '/profile': 'Profile',
         '/sites': 'Site Management',
-        '/audit': 'Audit Logs'
+        '/audit': 'Audit Logs',
+        '/reports': 'Reports & Records'
       }
       if (path.startsWith('/clients/')) return 'Client Details'
       if (path.startsWith('/vendors/')) return 'Vendor Details'

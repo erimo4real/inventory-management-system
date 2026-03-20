@@ -8,6 +8,7 @@ import * as authController from '../controllers/authController.js';
 import * as userController from '../controllers/userController.js';
 import * as siteController from '../controllers/siteController.js';
 import * as auditController from '../controllers/auditController.js';
+import * as reportController from '../controllers/reportController.js';
 import { upload, uploadImage, uploadImages, deleteImage } from '../controllers/uploadController.js';
 import { authenticate, authorize, requireSite, ROLES } from '../middleware/auth.js';
 
@@ -97,5 +98,17 @@ router.delete('/vendors/:id', authorize(ROLES.ADMIN), vendorController.deleteVen
 router.get('/audit/logs', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), auditController.getSiteAuditLogs);
 router.get('/audit/logs/stats', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), auditController.getAuditStats);
 router.get('/audit/entity/:entity_type/:entity_id', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), auditController.getEntityHistory);
+
+// ========== Reports (Require Site, Admin/Manager) ==========
+router.get('/reports/daily', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getDailySummary);
+router.get('/reports/products', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getProductReport);
+router.get('/reports/inventory', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getInventoryReport);
+router.get('/reports/transactions', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getTransactionReport);
+router.get('/reports/clients', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getClientReport);
+router.get('/reports/vendors', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getVendorReport);
+router.get('/reports/users', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getUserActivityReport);
+router.get('/reports/trends', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getMonthlyTrends);
+router.get('/reports/complete', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getCompleteReport);
+router.get('/reports/export', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.exportReport);
 
 export default router;

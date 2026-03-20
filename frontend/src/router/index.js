@@ -13,6 +13,7 @@ import Vendors from '../views/Vendors.vue'
 import VendorProfile from '../views/VendorProfile.vue'
 import Sites from '../views/Sites.vue'
 import AuditLogs from '../views/AuditLogs.vue'
+import Reports from '../views/Reports.vue'
 import Profile from '../views/Profile.vue'
 import Users from '../views/Users.vue'
 import Loading from '../views/Loading.vue'
@@ -105,6 +106,12 @@ const routes = [
     path: '/audit',
     name: 'AuditLogs',
     component: AuditLogs,
+    meta: { requiresAuth: true, roles: ['admin', 'manager'] }
+  },
+  {
+    path: '/reports',
+    name: 'Reports',
+    component: Reports,
     meta: { requiresAuth: true, roles: ['admin', 'manager'] }
   },
   {

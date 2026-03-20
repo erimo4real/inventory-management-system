@@ -128,6 +128,20 @@ export const usersAPI = {
   delete: (id) => api.delete(`/users/${id}`)
 }
 
+// Reports API
+export const reportsAPI = {
+  getDaily: (params) => api.get('/reports/daily', { params }),
+  getProducts: (params) => api.get('/reports/products', { params }),
+  getInventory: () => api.get('/reports/inventory'),
+  getTransactions: (params) => api.get('/reports/transactions', { params }),
+  getClients: () => api.get('/reports/clients'),
+  getVendors: () => api.get('/reports/vendors'),
+  getUsers: (params) => api.get('/reports/users', { params }),
+  getTrends: (params) => api.get('/reports/trends', { params }),
+  getComplete: (params) => api.get('/reports/complete', { params }),
+  exportReport: (params) => api.get('/reports/export', { params, responseType: 'blob' })
+}
+
 // Upload API
 export const uploadAPI = {
   uploadImage: (file, folder = 'inventory') => {

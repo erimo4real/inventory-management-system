@@ -8,6 +8,7 @@ import vendors from './modules/vendors'
 import users from './modules/users'
 import dashboard from './modules/dashboard'
 import sites from './modules/sites'
+import reports from './modules/reports'
 
 export default createStore({
   modules: {
@@ -19,6 +20,7 @@ export default createStore({
     vendors,
     users,
     dashboard,
-    sites
+    sites,
+    reports
   }
 })
