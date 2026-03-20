@@ -5,6 +5,7 @@ import inventory from '@/features/inventory/store/index.js'
 import suppliers from '@/features/suppliers/store/index.js'
 import clients from '@/features/clients/store/index.js'
 import vendors from '@/features/vendors/store/index.js'
+import categories from '@/features/categories/store/index.js'
 import sites from './modules/sites.js'
 import reports from './modules/reports.js'
 import loading from './modules/loading.js'
@@ -17,6 +18,7 @@ export default createStore({
     suppliers,
     clients,
     vendors,
+    categories,
     sites,
     reports,
     loading

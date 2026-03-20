@@ -19,7 +19,7 @@
         </div>
         <select v-model="selectedCategory" @change="handleFilter">
           <option value="">All Categories</option>
-          <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+          <option v-for="cat in productCategories" :key="cat" :value="cat">{{ cat }}</option>
         </select>
         <label class="checkbox">
           <input v-model="lowStockOnly" type="checkbox" @change="handleFilter" />
@@ -87,7 +87,10 @@
               </div>
               <div class="form-group">
                 <label>Category *</label>
-                <input v-model="form.category" type="text" required />
+                <select v-model="form.category" required>
+                  <option value="">Select Category</option>
+                  <option v-for="cat in productCategories" :key="cat" :value="cat">{{ cat }}</option>
+                </select>
               </div>
             </div>
             <div class="form-row">
@@ -148,7 +151,7 @@ export default {
     })
     
     const products = computed(() => store.getters['products/allProducts'])
-    const categories = computed(() => store.getters['products/allCategories'])
+    const productCategories = computed(() => store.getters['categories/productCategories'].map(c => c.name))
     const loading = computed(() => store.getters['products/productsLoading'])
     
     let searchTimeout = null
@@ -229,7 +232,7 @@ export default {
     
     onMounted(() => {
       fetchProducts()
-      store.dispatch('products/fetchCategories')
+      store.dispatch('categories/fetchCategories', { type: 'product' })
     })
     
     return {
@@ -240,7 +243,7 @@ export default {
       showEditModal,
       form,
       products,
-      categories,
+      productCategories,
       loading,
       handleSearch,
       handleFilter,

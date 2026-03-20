@@ -80,6 +80,11 @@
           <span class="icon">🚚</span>
           <span v-if="!collapsed">Vendors</span>
         </router-link>
+
+        <router-link v-if="isAdmin" to="/categories" class="nav-item" :class="{ active: $route.path === '/categories' }">
+          <span class="icon">🏷️</span>
+          <span v-if="!collapsed">Categories</span>
+        </router-link>
         
         <router-link to="/reports" class="nav-item" :class="{ active: $route.path === '/reports' }">
           <span class="icon">📋</span>
@@ -148,7 +153,8 @@ export default {
         '/profile': 'Profile',
         '/sites': 'Site Management',
         '/audit': 'Audit Logs',
-        '/reports': 'Reports & Records'
+        '/reports': 'Reports & Records',
+        '/categories': 'Categories'
       }
       if (path.startsWith('/clients/')) return 'Client Details'
       if (path.startsWith('/vendors/')) return 'Vendor Details'

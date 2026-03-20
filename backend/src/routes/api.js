@@ -9,6 +9,7 @@ import * as userController from '../controllers/userController.js';
 import * as siteController from '../controllers/siteController.js';
 import * as auditController from '../controllers/auditController.js';
 import * as reportController from '../controllers/reportController.js';
+import * as categoryController from '../controllers/categoryController.js';
 import { upload, uploadImage, uploadImages, deleteImage } from '../controllers/uploadController.js';
 import { authenticate, authorize, requireSite, ROLES } from '../middleware/auth.js';
 
@@ -93,6 +94,14 @@ router.get('/vendors/:id', requireSite, vendorController.getVendorById);
 router.post('/vendors', authorize(ROLES.ADMIN, ROLES.MANAGER), vendorController.createVendor);
 router.put('/vendors/:id', authorize(ROLES.ADMIN, ROLES.MANAGER), vendorController.updateVendor);
 router.delete('/vendors/:id', authorize(ROLES.ADMIN), vendorController.deleteVendor);
+
+// ========== Categories (Role-based, Require Site) ==========
+router.get('/categories', requireSite, categoryController.getAll);
+router.get('/categories/stats', requireSite, categoryController.getStats);
+router.get('/categories/:id', requireSite, categoryController.getById);
+router.post('/categories', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), categoryController.create);
+router.put('/categories/:id', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), categoryController.update);
+router.delete('/categories/:id', requireSite, authorize(ROLES.ADMIN), categoryController.delete);
 
 // ========== Audit Logs (Require Site) ==========
 router.get('/audit/logs', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), auditController.getSiteAuditLogs);

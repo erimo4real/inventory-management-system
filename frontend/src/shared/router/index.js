@@ -60,6 +60,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/categories',
+    name: 'Categories',
+    component: () => import('@/features/categories/views/Categories.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/reports',
     name: 'Reports',
     component: () => import('@/features/reports/views/Reports.vue'),

@@ -149,6 +149,21 @@ const initDb = async () => {
       )
     `);
 
+    // Categories table for products and vendors
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        site_id INTEGER REFERENCES sites(id) ON DELETE CASCADE,
+        name VARCHAR(100) NOT NULL,
+        type VARCHAR(20) NOT NULL CHECK (type IN ('product', 'vendor', 'supplier', 'client')),
+        description TEXT,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(site_id, name, type)
+      )
+    `);
+
     // Indexes
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sites_slug ON sites(slug)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
@@ -188,6 +203,8 @@ const initDb = async () => {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_categories_site ON categories(site_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_categories_type ON categories(type)`);
 
     await client.query('COMMIT');
     console.log('Database tables created successfully');
