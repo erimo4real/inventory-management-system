@@ -1,6 +1,6 @@
 # Inventory Management System (IMS)
 
-A full-stack inventory management application built with Vue.js/Node.js/PostgreSQL, designed for tracking products, managing stock levels, and monitoring inventory transactions.
+A full-stack inventory management application built with Vue.js/Node.js/PostgreSQL, designed for tracking products, managing stock levels, monitoring inventory transactions, and supporting multiple sites with complete audit logging.
 
 ## Tech Stack
 
@@ -11,19 +11,32 @@ A full-stack inventory management application built with Vue.js/Node.js/PostgreS
 | Database | PostgreSQL |
 | File Storage | Cloudinary |
 | Authentication | JWT |
+| Deployment | Docker |
 
 ## Features
 
+### Core Features
+- **Multi-Site Support** - Manage multiple warehouses/locations with isolated data
 - **Authentication** - Secure login/register with JWT tokens
 - **Role-Based Access Control** - Admin, Manager, Staff roles
 - **Product Management** - CRUD operations with SKU, category, price, quantity, images
 - **Inventory Operations** - Stock IN, Stock OUT, Stock ADJUST
-- **Supplier Management** - Track vendor information
+- **Supplier Management** - Track vendor/supplier information
+- **Client Management** - Manage customer/client profiles with contact details
+- **Vendor Management** - Track vendor relationships with categories
 - **Low Stock Alerts** - Products below threshold
 - **Dashboard** - Overview stats and recent transactions
 - **Transaction History** - Full audit trail of all stock changes
 - **Image Upload** - Cloudinary integration for product images
 - **User Management** - Admin can manage users
+- **Audit Logging** - Complete check & balance with user activity tracking
+
+### Multi-Site Architecture
+- Each site has its own isolated data (products, clients, vendors, inventory)
+- Site selector in header for quick switching
+- Admin can create/manage sites
+- Users can be assigned to multiple sites with different roles
+- All actions are logged per site for accountability
 
 ## User Roles & Permissions
 
@@ -36,40 +49,38 @@ A full-stack inventory management application built with Vue.js/Node.js/PostgreS
 | Stock In/Out | ✓ | ✓ | ✓ |
 | Stock Adjust | ✓ | ✓ | ✗ |
 | Manage Suppliers | ✓ | ✓ | ✗ |
-| Manage Users | ✓ | View | ✗ |
+| Manage Clients | ✓ | ✓ | ✗ |
+| Manage Vendors | ✓ | ✓ | ✗ |
+| Manage Users | ✓ | ✓ | ✗ |
+| Manage Sites | ✓ | ✗ | ✗ |
+| View Audit Logs | ✓ | ✓ | ✗ |
 
-## Project Structure
+## Quick Start with Docker
 
-```
-inventory-management-system/
-├── backend/
-│   └── src/
-│       ├── config/          # Database & Cloudinary config
-│       ├── controllers/     # HTTP request handlers
-│       ├── repositories/    # Data access layer
-│       ├── services/        # Business logic
-│       ├── middleware/      # Auth, validation, errors
-│       ├── models/          # Schema definitions
-│       ├── utils/           # Helper functions
-│       └── routes/          # API routes
-├── frontend/
-│   └── src/
-│       ├── views/          # Page components
-│       ├── services/        # API client
-│       ├── store/           # Vuex state management
-│       │   └── modules/     # Auth, Products, Inventory, etc.
-│       ├── components/      # Reusable components
-│       └── router/          # Navigation
-└── README.md
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/inventory-management-system.git
+cd inventory-management-system
+
+# Copy and configure environment
+cp docker.env.example .env
+# Edit .env with your settings
+
+# Build and start containers
+docker compose up -d
+
+# Access the app
+# Frontend: http://localhost
+# Backend API: http://localhost:3000/api
 ```
 
-## Prerequisites
+## Manual Installation
+
+### Prerequisites
 
 - Node.js 18+
 - PostgreSQL 14+
 - Cloudinary account (for image uploads)
-
-## Installation & Setup
 
 ### 1. Clone and Install Dependencies
 
@@ -93,8 +104,6 @@ CREATE DATABASE inventory_db;
 
 ### 3. Configure Environment Variables
 
-Copy the example env file and update values:
-
 ```bash
 cd backend
 cp .env.example .env
@@ -116,23 +125,12 @@ CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-Edit `frontend/.env`:
-```
-VITE_API_URL=http://localhost:3000/api
-```
-
 ### 4. Initialize Database
 
 ```bash
 cd backend
 npm run db:init
 ```
-
-This creates tables:
-- `users` - User accounts with roles
-- `suppliers` - Vendor information
-- `products` - Product inventory
-- `inventory_transactions` - Stock change history
 
 ### 5. Run the Application
 
@@ -146,6 +144,33 @@ cd frontend
 npm run dev
 ```
 
+## Project Structure
+
+```
+inventory-management-system/
+├── backend/
+│   └── src/
+│       ├── config/          # Database & Cloudinary config
+│       ├── controllers/     # HTTP request handlers
+│       ├── repositories/    # Data access layer
+│       ├── services/       # Business logic
+│       ├── middleware/      # Auth, validation, errors
+│       ├── models/          # Schema definitions
+│       ├── utils/           # Helper functions
+│       └── routes/          # API routes
+├── frontend/
+│   └── src/
+│       ├── views/          # Page components
+│       ├── services/       # API client
+│       ├── store/          # Vuex state management
+│       │   └── modules/   # Auth, Products, Inventory, etc.
+│       ├── components/     # Reusable components
+│       └── router/          # Navigation
+├── docker-compose.yml
+├── docker.env.example
+└── README.md
+```
+
 ## API Endpoints
 
 ### Authentication
@@ -155,6 +180,15 @@ npm run dev
 | POST | `/api/auth/login` | Login user |
 | GET | `/api/auth/me` | Get current user |
 | POST | `/api/auth/change-password` | Change password |
+
+### Sites (Admin)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/sites` | List all sites |
+| POST | `/api/sites` | Create site |
+| PUT | `/api/sites/:id` | Update site |
+| DELETE | `/api/sites/:id` | Delete site |
+| GET | `/api/sites/my` | Get user's assigned sites |
 
 ### Products
 | Method | Endpoint | Description |
@@ -186,6 +220,27 @@ npm run dev
 | PUT | `/api/suppliers/:id` | Update supplier (Admin/Manager) |
 | DELETE | `/api/suppliers/:id` | Delete supplier (Admin only) |
 
+### Clients
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/clients` | List all clients |
+| GET | `/api/clients/:id` | Get single client |
+| GET | `/api/clients/stats` | Client statistics |
+| POST | `/api/clients` | Create client (Admin/Manager) |
+| PUT | `/api/clients/:id` | Update client (Admin/Manager) |
+| DELETE | `/api/clients/:id` | Delete client (Admin only) |
+
+### Vendors
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/vendors` | List all vendors |
+| GET | `/api/vendors/:id` | Get single vendor |
+| GET | `/api/vendors/stats` | Vendor statistics |
+| GET | `/api/vendors/categories` | Vendor categories |
+| POST | `/api/vendors` | Create vendor (Admin/Manager) |
+| PUT | `/api/vendors/:id` | Update vendor (Admin/Manager) |
+| DELETE | `/api/vendors/:id` | Delete vendor (Admin only) |
+
 ### Users (Admin)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -195,6 +250,13 @@ npm run dev
 | PUT | `/api/users/:id` | Update user |
 | DELETE | `/api/users/:id` | Delete user |
 
+### Audit Logs (Admin/Manager)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/audit/logs` | Get audit logs |
+| GET | `/api/audit/logs/stats` | Audit statistics |
+| GET | `/api/audit/entity/:type/:id` | Entity history |
+
 ### Upload
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -202,117 +264,62 @@ npm run dev
 | POST | `/api/upload/images` | Upload multiple images |
 | DELETE | `/api/upload/image` | Delete image |
 
-## Vuex Store Modules
+## Database Schema
 
-```javascript
-// Accessing state
-store.state.auth.user        // Current user
-store.state.products.items   // Products list
-store.state.dashboard.stats  // Dashboard statistics
-
-// Using getters
-store.getters['auth/isAuthenticated']
-store.getters['auth/isAdmin']
-store.getters['products/allProducts']
-store.getters['dashboard/totalProducts']
-store.getters['dashboard/lowStockCount']
-
-// Dispatching actions
-store.dispatch('auth/login', { email, password })
-store.dispatch('products/fetchProducts')
-store.dispatch('dashboard/fetchDashboardStats')
-```
-
-## Request/Response Examples
-
-### Register User
-```bash
-POST /api/auth/register
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "role": "admin"
-}
-```
-
-### Create Product
-```bash
-POST /api/products
-{
-  "name": "Wireless Mouse",
-  "sku": "WM-001",
-  "category": "Electronics",
-  "quantity": 50,
-  "price": 29.99,
-  "low_stock_threshold": 10,
-  "image_url": "https://cloudinary.com/..."
-}
-```
-
-### Stock In
-```bash
-POST /api/inventory/in
-{
-  "product_id": 1,
-  "quantity": 20,
-  "note": "Restocking from supplier"
-}
-```
-
-### Dashboard Stats Response
-```json
-{
-  "total_products": 150,
-  "total_stock": 5000,
-  "low_stock_count": 5,
-  "total_value": 75000.00,
-  "recent_transactions": [...]
-}
-```
-
-## Deployment
-
-### Backend (Vercel)
-```bash
-cd backend
-vercel deploy
-```
-
-### Frontend (Vercel)
-```bash
-cd frontend
-vercel deploy
-```
-
-## Development
-
-### Running in Development Mode
-```bash
-# Backend with auto-reload
-cd backend
-npm run dev
-
-# Frontend with hot reload
-cd frontend
-npm run dev
-```
-
-### Debug Logging
-All layers include debug logs for troubleshooting:
-```
-[Controller createProduct] body: {...}
-[ProductService createProduct] input: {...}
-[ProductRepo create] data: {...}
-```
+### Tables Created
+- `sites` - Multiple site/warehouse locations
+- `users` - User accounts with roles
+- `user_sites` - User-site assignments
+- `suppliers` - Supplier/vendor information
+- `products` - Product inventory
+- `inventory_transactions` - Stock change history
+- `clients` - Client/customer profiles
+- `vendors` - Vendor relationships
+- `audit_logs` - Complete activity logging
 
 ## First Time Setup
 
-1. Register first user - will be assigned Admin role
-2. Login with admin credentials
-3. Navigate to Profile to change password
-4. Add products, suppliers
-5. Manage inventory with stock in/out
+1. Start the application (Docker or manual)
+2. Register first user - will be assigned Admin role
+3. Login with admin credentials
+4. Go to **Site Management** to create your first site
+5. Add products, suppliers, clients, vendors
+6. Manage inventory with stock in/out
+7. Monitor activity in **Audit Logs**
+
+## Docker Deployment
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+DB_USER=postgres
+DB_PASSWORD=your_secure_password
+JWT_SECRET=your-very-secure-jwt-secret-key-min-32-chars
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+### Docker Commands
+
+```bash
+# Build images
+docker compose build
+
+# Start containers
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop containers
+docker compose down
+
+# Rebuild and start
+docker compose up --build -d
+```
 
 ## License
 
