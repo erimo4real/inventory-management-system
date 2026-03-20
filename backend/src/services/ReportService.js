@@ -15,7 +15,7 @@ export default class ReportService {
   }
 
   static async getProductReport(siteId, options = {}) {
-    const { includeLowStock = true, includeTopProducts = true, includeCategories = true } = options;
+    const { includeLowStock = true, includeCategories = true } = options;
     
     const report = {
       summary: await reportRepo.getDailyProductSummary(siteId)
@@ -23,10 +23,6 @@ export default class ReportService {
     
     if (includeLowStock) {
       report.low_stock = await reportRepo.getLowStockProducts(siteId);
-    }
-    
-    if (includeTopProducts) {
-      report.top_products = await reportRepo.getTopProducts(siteId);
     }
     
     if (includeCategories) {
@@ -100,17 +96,6 @@ export default class ReportService {
       });
     } else {
       lines.push('No low stock items');
-    }
-    
-    lines.push('');
-    lines.push('--- TOP PRODUCTS (Last 30 Days) ---');
-    if (report.products?.top_products?.length > 0) {
-      lines.push('Product | Sold | Transactions');
-      report.products.top_products.forEach(p => {
-        lines.push(`${p.name} | ${p.total_sold} | ${p.transaction_count}`);
-      });
-    } else {
-      lines.push('No sales data');
     }
     
     lines.push('');

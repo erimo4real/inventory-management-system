@@ -120,34 +120,6 @@
           <div v-else class="empty-message">No low stock products 🎉</div>
         </section>
 
-        <!-- Top Products -->
-        <section class="section">
-          <h2>🏆 Top Products (Last 30 Days)</h2>
-          <div v-if="products?.top_products?.length" class="data-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>SKU</th>
-                  <th>Current Stock</th>
-                  <th>Total Sold</th>
-                  <th>Transactions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in products.top_products" :key="item.id">
-                  <td>{{ item.name }}</td>
-                  <td>{{ item.sku }}</td>
-                  <td>{{ item.quantity }}</td>
-                  <td class="highlight">{{ item.total_sold }}</td>
-                  <td>{{ item.transaction_count }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div v-else class="empty-message">No sales data yet</div>
-        </section>
-
         <!-- Category Breakdown -->
         <section class="section">
           <h2>📊 Inventory by Category</h2>
@@ -264,11 +236,9 @@ export default {
     const trends = computed(() => store.getters['reports/trends'])
 
     const fetchAllReports = async () => {
-      const params = { date: selectedDate.value }
       try {
         await Promise.all([
-          store.dispatch('reports/fetchDailyReport', params),
-          store.dispatch('reports/fetchProductReport', params),
+          store.dispatch('reports/fetchDailyReport'),
           store.dispatch('reports/fetchInventoryReport'),
           store.dispatch('reports/fetchUserReport', { days: 30 }),
           store.dispatch('reports/fetchTrends', { months: 6 })
@@ -323,7 +293,6 @@ export default {
       selectedDate,
       loading,
       daily,
-      products,
       inventory,
       users,
       trends,

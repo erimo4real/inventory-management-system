@@ -72,23 +72,6 @@ export default class ReportRepository {
     return result.rows;
   }
 
-  async getTopProducts(siteId, days = 30, limit = 10) {
-    const result = await pool.query(`
-      SELECT 
-        p.id, p.name, p.sku, p.quantity, p.price,
-        COUNT(t.id) as transaction_count,
-        COALESCE(SUM(t.quantity) FILTER (WHERE t.type = 'OUT'), 0) as total_sold
-      FROM products p
-      LEFT JOIN inventory_transactions t ON p.id = t.product_id 
-        AND t.created_at >= NOW() - INTERVAL '${parseInt(days)} days'
-      WHERE p.site_id = $1 AND p.is_active = true
-      GROUP BY p.id
-      ORDER BY total_sold DESC
-      LIMIT $2
-    `, [siteId, limit]);
-    return result.rows;
-  }
-
   async getClientSummary(siteId) {
     const result = await pool.query(`
       SELECT 
@@ -181,7 +164,6 @@ export default class ReportRepository {
     const productSummary = await this.getDailyProductSummary(siteId, date);
     const transactionSummary = await this.getDailyTransactionSummary(siteId, date);
     const lowStockProducts = await this.getLowStockProducts(siteId, 20);
-    const topProducts = await this.getTopProducts(siteId, 30, 10);
     const categorySummary = await this.getProductCategorySummary(siteId);
     const recentTransactions = await this.getRecentTransactions(siteId, 1, 100);
     const clientSummary = await this.getClientSummary(siteId);
@@ -196,7 +178,6 @@ export default class ReportRepository {
       products: {
         ...productSummary,
         low_stock_products: lowStockProducts,
-        top_products: topProducts,
         by_category: categorySummary
       },
       transactions: {
