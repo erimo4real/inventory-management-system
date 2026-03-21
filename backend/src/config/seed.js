@@ -25,7 +25,15 @@ const seed = async () => {
       ON CONFLICT (site_id, email) DO UPDATE SET name = EXCLUDED.name
       RETURNING id
     `, [siteId, hashedPassword]);
-    console.log('Created admin user:', userResult.rows[0].id);
+    const adminUserId = userResult.rows[0].id;
+    console.log('Created admin user:', adminUserId);
+
+    // Link admin to site
+    await client.query(`
+      INSERT INTO user_sites (user_id, site_id, role, is_active)
+      VALUES ($1, $2, 'admin', true)
+      ON CONFLICT (user_id, site_id) DO UPDATE SET role = 'admin', is_active = true
+    `, [adminUserId, siteId]);
 
     // Create manager user
     const managerResult = await client.query(`
@@ -34,7 +42,15 @@ const seed = async () => {
       ON CONFLICT (site_id, email) DO UPDATE SET name = EXCLUDED.name
       RETURNING id
     `, [siteId, hashedPassword]);
-    console.log('Created manager user:', managerResult.rows[0].id);
+    const managerUserId = managerResult.rows[0].id;
+    console.log('Created manager user:', managerUserId);
+
+    // Link manager to site
+    await client.query(`
+      INSERT INTO user_sites (user_id, site_id, role, is_active)
+      VALUES ($1, $2, 'manager', true)
+      ON CONFLICT (user_id, site_id) DO UPDATE SET role = 'manager', is_active = true
+    `, [managerUserId, siteId]);
 
     // Create staff user
     const staffResult = await client.query(`
@@ -43,7 +59,15 @@ const seed = async () => {
       ON CONFLICT (site_id, email) DO UPDATE SET name = EXCLUDED.name
       RETURNING id
     `, [siteId, hashedPassword]);
-    console.log('Created staff user:', staffResult.rows[0].id);
+    const staffUserId = staffResult.rows[0].id;
+    console.log('Created staff user:', staffUserId);
+
+    // Link staff to site
+    await client.query(`
+      INSERT INTO user_sites (user_id, site_id, role, is_active)
+      VALUES ($1, $2, 'staff', true)
+      ON CONFLICT (user_id, site_id) DO UPDATE SET role = 'staff', is_active = true
+    `, [staffUserId, siteId]);
 
     // Create Categories
     const categories = [
