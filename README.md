@@ -30,13 +30,24 @@ A full-stack inventory management application built with Vue.js/Node.js/PostgreS
 - **Image Upload** - Cloudinary integration for product images
 - **User Management** - Admin can manage users
 - **Audit Logging** - Complete check & balance with user activity tracking
+- **Categories Management** - Organize products, vendors, suppliers, clients by category
+- **Reports & Records** - Daily summaries, inventory valuation, monthly trends
 
-### Multi-Site Architecture
-- Each site has its own isolated data (products, clients, vendors, inventory)
-- Site selector in header for quick switching
-- Admin can create/manage sites
-- Users can be assigned to multiple sites with different roles
-- All actions are logged per site for accountability
+### Vuexy-Style UI
+- Professional Vuexy-inspired design throughout the application
+- Custom SVG icons (no emojis) for all features
+- Consistent color scheme (purple primary #7367f0)
+- Toast notifications for success/error feedback
+- Loading spinners and empty states
+- Responsive design for all screen sizes
+- Breadcrumb navigation
+- Professional stat cards with icons
+- Badge system for status indicators
+
+### Authentication Pages
+- **Login Page** - Chart illustrations, demo credentials, remember me
+- **Register Page** - Feature highlights, animated SVG illustrations
+- **Forgot Password** - Security icons, recovery process visualization
 
 ## User Roles & Permissions
 
@@ -59,7 +70,7 @@ A full-stack inventory management application built with Vue.js/Node.js/PostgreS
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/inventory-management-system.git
+git clone https://github.com/erimo4real/inventory-management-system.git
 cd inventory-management-system
 
 # Copy and configure environment
@@ -160,12 +171,25 @@ inventory-management-system/
 │       └── routes/          # API routes
 ├── frontend/
 │   └── src/
-│       ├── views/          # Page components
-│       ├── services/       # API client
-│       ├── store/          # Vuex state management
-│       │   └── modules/   # Auth, Products, Inventory, etc.
-│       ├── components/     # Reusable components
-│       └── router/          # Navigation
+│       ├── features/        # Feature-based modules
+│       │   ├── auth/       # Authentication views
+│       │   ├── dashboard/  # Dashboard view
+│       │   ├── products/   # Products CRUD
+│       │   ├── inventory/  # Inventory management
+│       │   ├── clients/    # Clients CRUD
+│       │   ├── vendors/    # Vendors CRUD
+│       │   ├── categories/ # Categories management
+│       │   ├── users/     # User management
+│       │   ├── reports/    # Reports & records
+│       │   ├── sites/     # Site management
+│       │   ├── audit/     # Audit logs
+│       │   └── profile/   # User profile
+│       └── shared/
+│           ├── components/ # Shared components
+│           ├── services/   # API client
+│           ├── store/      # Vuex modules
+│           ├── styles/     # Global styles
+│           └── router/     # Navigation
 ├── docker-compose.yml
 ├── docker.env.example
 └── README.md
@@ -241,6 +265,14 @@ inventory-management-system/
 | PUT | `/api/vendors/:id` | Update vendor (Admin/Manager) |
 | DELETE | `/api/vendors/:id` | Delete vendor (Admin only) |
 
+### Categories
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/categories` | List all categories |
+| POST | `/api/categories` | Create category |
+| PUT | `/api/categories/:id` | Update category |
+| DELETE | `/api/categories/:id` | Delete category |
+
 ### Users (Admin)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -249,6 +281,14 @@ inventory-management-system/
 | POST | `/api/users` | Create user |
 | PUT | `/api/users/:id` | Update user |
 | DELETE | `/api/users/:id` | Delete user |
+
+### Reports
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/reports/daily` | Daily summary report |
+| GET | `/api/reports/inventory` | Inventory valuation |
+| GET | `/api/reports/users` | User activity report |
+| GET | `/api/reports/trends` | Monthly trends |
 
 ### Audit Logs (Admin/Manager)
 | Method | Endpoint | Description |
@@ -275,6 +315,7 @@ inventory-management-system/
 - `inventory_transactions` - Stock change history
 - `clients` - Client/customer profiles
 - `vendors` - Vendor relationships
+- `categories` - Category types for all entities
 - `audit_logs` - Complete activity logging
 
 ## First Time Setup
@@ -286,6 +327,11 @@ inventory-management-system/
 5. Add products, suppliers, clients, vendors
 6. Manage inventory with stock in/out
 7. Monitor activity in **Audit Logs**
+
+### Demo Credentials
+- Admin: `admin@example.com` / `admin123`
+- Manager: `manager@example.com` / `admin123`
+- Staff: `staff@example.com` / `admin123`
 
 ## Docker Deployment
 
