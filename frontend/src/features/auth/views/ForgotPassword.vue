@@ -20,6 +20,76 @@
           <h1>Reset Your Password</h1>
           <p>Don't worry, we'll send you an email with instructions to reset your password.</p>
         </div>
+        
+        <!-- Feature Illustrations -->
+        <div class="features-grid">
+          <!-- Security Lock -->
+          <div class="feature-card">
+            <div class="feature-illustration">
+              <svg viewBox="0 0 120 80" class="lock-svg">
+                <circle cx="60" cy="40" r="30" fill="rgba(255,255,255,0.1)"/>
+                <rect x="45" y="35" width="30" height="25" rx="4" fill="rgba(255,255,255,0.2)"/>
+                <path d="M50 35 V25 A10 10 0 0 1 70 25 V35" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <circle cx="60" cy="47" r="5" fill="white"/>
+                <rect x="58" y="47" width="4" height="8" rx="2" fill="white"/>
+              </svg>
+            </div>
+            <div class="feature-label">
+              <span class="feature-title">Secure Access</span>
+              <span class="feature-desc">Protected by encryption</span>
+            </div>
+          </div>
+
+          <!-- Email Send -->
+          <div class="feature-card">
+            <div class="feature-illustration">
+              <svg viewBox="0 0 120 80" class="email-svg">
+                <rect x="20" y="15" width="80" height="50" rx="4" fill="rgba(255,255,255,0.1)"/>
+                <polyline points="20,15 60,40 100,15" stroke="white" stroke-width="2" fill="none"/>
+                <polyline points="20,65 40,45 60,55" stroke="#28c76f" stroke-width="2" fill="none" stroke-dasharray="3,2"/>
+                <circle cx="95" cy="20" r="15" fill="#28c76f">
+                  <animate attributeName="opacity" from="1" to="0.3" dur="1.5s" repeatCount="indefinite"/>
+                </circle>
+                <polyline points="89,20 94,25 101,15" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="feature-label">
+              <span class="feature-title">Quick Recovery</span>
+              <span class="feature-desc">Instant email delivery</span>
+            </div>
+          </div>
+
+          <!-- Shield Protection -->
+          <div class="feature-card">
+            <div class="feature-illustration">
+              <svg viewBox="0 0 120 80" class="shield-svg">
+                <path d="M60 10 L100 25 V45 C100 60 60 75 60 75 C60 75 20 60 20 45 V25 L60 10Z" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+                <polyline points="45,40 55,50 75,30" stroke="#28c76f" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="feature-label">
+              <span class="feature-title">Account Safety</span>
+              <span class="feature-desc">Verified recovery process</span>
+            </div>
+          </div>
+
+          <!-- Clock Timer -->
+          <div class="feature-card">
+            <div class="feature-illustration">
+              <svg viewBox="0 0 120 80" class="clock-svg">
+                <circle cx="60" cy="40" r="28" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+                <line x1="60" y1="40" x2="60" y2="22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <line x1="60" y1="40" x2="72" y2="40" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="60" cy="40" r="3" fill="white"/>
+                <text x="60" y="70" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">Link expires in 24h</text>
+              </svg>
+            </div>
+            <div class="feature-label">
+              <span class="feature-title">Time-Sensitive</span>
+              <span class="feature-desc">Links expire for security</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -190,6 +260,53 @@ export default {
   line-height: 1.6;
 }
 
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.feature-illustration {
+  margin-bottom: 12px;
+}
+
+.feature-illustration svg {
+  width: 100%;
+  height: auto;
+}
+
+.feature-label {
+  text-align: center;
+}
+
+.feature-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.feature-desc {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 /* Right Side - Form */
 .auth-side.right-side {
   flex: 0.8;
@@ -353,7 +470,7 @@ export default {
   .auth-side.left-side {
     flex: none;
     padding: 40px;
-    min-height: 200px;
+    min-height: auto;
   }
   
   .side-text h1 {
@@ -361,11 +478,31 @@ export default {
   }
   
   .brand-logo {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
+  }
+  
+  .side-text {
+    margin-bottom: 24px;
+  }
+  
+  .features-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+  
+  .feature-card {
+    padding: 12px;
   }
   
   .auth-side.right-side {
     padding: 40px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
