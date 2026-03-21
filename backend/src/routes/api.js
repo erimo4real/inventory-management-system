@@ -9,7 +9,7 @@ import * as userController from '../controllers/userController.js';
 import * as siteController from '../controllers/siteController.js';
 import * as auditController from '../controllers/auditController.js';
 import * as reportController from '../controllers/reportController.js';
-import * as categoryController from '../controllers/categoryController.js';
+import categoryController from '../controllers/categoryController.js';
 import { upload, uploadImage, uploadImages, deleteImage } from '../controllers/uploadController.js';
 import { authenticate, authorize, requireSite, ROLES } from '../middleware/auth.js';
 

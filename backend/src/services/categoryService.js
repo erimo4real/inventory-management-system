@@ -1,5 +1,5 @@
 import categoryRepository from '../repositories/categoryRepository.js';
-import auditService from './auditService.js';
+import AuditService from './AuditService.js';
 
 class CategoryService {
   async getAll(siteId, type) {
@@ -26,7 +26,7 @@ class CategoryService {
 
     const category = await categoryRepository.create(categoryData, siteId);
     
-    await auditService.log({
+    await AuditService.log({
       userId,
       siteId,
       action: 'CREATE',
@@ -57,7 +57,7 @@ class CategoryService {
 
     const category = await categoryRepository.update(id, categoryData, siteId);
 
-    await auditService.log({
+    await AuditService.log({
       userId,
       siteId,
       action: 'UPDATE',
@@ -78,7 +78,7 @@ class CategoryService {
 
     const deleted = await categoryRepository.delete(id, siteId);
 
-    await auditService.log({
+    await AuditService.log({
       userId,
       siteId,
       action: 'DELETE',
