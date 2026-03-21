@@ -68,10 +68,17 @@ const actions = {
     }
   },
 
-  async initializeSite({ dispatch }) {
+  async initializeSite({ dispatch, rootState }) {
     try {
       const savedSiteId = Cookies.get('site_id')
-      let sites = await dispatch('fetchMySites')
+      const isAdmin = rootState.auth.user?.role === 'admin'
+      
+      let sites
+      if (isAdmin) {
+        sites = await dispatch('fetchSites')
+      } else {
+        sites = await dispatch('fetchMySites')
+      }
       
       if (!sites || sites.length === 0) {
         console.error('No sites found for user')
