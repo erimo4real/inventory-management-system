@@ -2,118 +2,200 @@
   <AppLayout>
     <div class="products-page">
       <div class="page-header">
-        <h1 class="page-title">Products</h1>
-        <button class="btn-primary" @click="showAddModal = true">
-          + Add Product
+        <div class="page-title-area">
+          <h1 class="page-title">Products</h1>
+          <nav class="breadcrumb">
+            <router-link to="/">Dashboard</router-link>
+            <span class="separator">/</span>
+            <span class="current">Products</span>
+          </nav>
+        </div>
+        <button class="btn btn-primary" @click="showAddModal = true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Product
         </button>
       </div>
       
-      <div class="filters">
-        <div class="search-box">
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Search products..."
-            @input="handleSearch"
-          />
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex gap-3 flex-wrap">
+            <div class="search-box">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input 
+                v-model="searchQuery" 
+                type="text" 
+                class="form-control" 
+                placeholder="Search products..."
+                @input="handleSearch"
+              />
+            </div>
+            <select v-model="selectedCategory" class="form-control" style="width: 180px;" @change="handleFilter">
+              <option value="">All Categories</option>
+              <option v-for="cat in productCategories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+            <label class="checkbox-wrapper d-flex align-center gap-2">
+              <input v-model="lowStockOnly" type="checkbox" @change="handleFilter" />
+              <span class="text-muted" style="font-size: 14px;">Low Stock Only</span>
+            </label>
+          </div>
         </div>
-        <select v-model="selectedCategory" @change="handleFilter">
-          <option value="">All Categories</option>
-          <option v-for="cat in productCategories" :key="cat" :value="cat">{{ cat }}</option>
-        </select>
-        <label class="checkbox">
-          <input v-model="lowStockOnly" type="checkbox" @change="handleFilter" />
-          Low Stock Only
-        </label>
+        
+        <div v-if="loading" class="card-body">
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+          </div>
+        </div>
+        
+        <div v-else-if="products.length" class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="product in products" :key="product.id">
+                  <td>
+                    <code class="sku-code">{{ product.sku }}</code>
+                  </td>
+                  <td class="fw-600">{{ product.name }}</td>
+                  <td>
+                    <span class="badge badge-primary">{{ product.category }}</span>
+                  </td>
+                  <td>
+                    <span 
+                      class="fw-600" 
+                      :class="{ 'text-danger': product.quantity <= product.low_stock_threshold }"
+                    >
+                      {{ product.quantity }}
+                    </span>
+                    <span v-if="product.quantity <= product.low_stock_threshold" class="badge badge-danger ml-2" style="margin-left: 8px;">
+                      Low
+                    </span>
+                  </td>
+                  <td>${{ product.price?.toFixed(2) }}</td>
+                  <td>
+                    <span class="badge" :class="product.is_active ? 'badge-success' : 'badge-secondary'">
+                      {{ product.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    <div class="d-flex gap-2 justify-end">
+                      <button class="btn btn-sm btn-outline" @click="editProduct(product)" title="Edit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button class="btn btn-sm btn-outline btn-outline-danger" @click="deleteProduct(product.id)" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div v-else class="card-body">
+          <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-muted mb-3">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <h4>No products found</h4>
+            <p>Get started by adding your first product</p>
+            <button class="btn btn-primary" @click="showAddModal = true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Product
+            </button>
+          </div>
+        </div>
       </div>
       
-      <div v-if="loading" class="loading">Loading...</div>
-      
-      <div v-else class="products-table">
-        <table>
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="product in products" :key="product.id">
-              <td class="sku">{{ product.sku }}</td>
-              <td>{{ product.name }}</td>
-              <td>
-                <span class="category-tag">{{ product.category }}</span>
-              </td>
-              <td>
-                <span 
-                  class="quantity" 
-                  :class="{ 'low-stock': product.quantity <= product.low_stock_threshold }"
-                >
-                  {{ product.quantity }}
-                </span>
-              </td>
-              <td>${{ product.price }}</td>
-              <td>
-                <span class="status" :class="product.is_active ? 'active' : 'inactive'">
-                  {{ product.is_active ? 'Active' : 'Inactive' }}
-                </span>
-              </td>
-              <td>
-                <button class="btn-icon" @click="editProduct(product)">✏️</button>
-                <button class="btn-icon" @click="deleteProduct(product.id)">🗑️</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
+      <div v-if="showAddModal || showEditModal" class="modal-backdrop" @click="closeModal">
         <div class="modal" @click.stop>
-          <h2>{{ showEditModal ? 'Edit Product' : 'Add Product' }}</h2>
+          <div class="modal-header">
+            <h3>{{ showEditModal ? 'Edit Product' : 'Add Product' }}</h3>
+            <button class="btn-icon" @click="closeModal">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
           <form @submit.prevent="handleSubmit">
-            <div class="form-group">
-              <label>Name *</label>
-              <input v-model="form.name" type="text" required />
-            </div>
-            <div class="form-row">
+            <div class="modal-body">
               <div class="form-group">
-                <label>SKU *</label>
-                <input v-model="form.sku" type="text" required :disabled="showEditModal" />
+                <label class="form-label">Name *</label>
+                <input v-model="form.name" type="text" class="form-control" required />
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-group">
+                    <label class="form-label">SKU *</label>
+                    <input v-model="form.sku" type="text" class="form-control" required :disabled="showEditModal" />
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <select v-model="form.category" class="form-control" required>
+                      <option value="">Select Category</option>
+                      <option v-for="cat in productCategories" :key="cat" :value="cat">{{ cat }}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    <input v-model.number="form.quantity" type="number" class="form-control" min="0" />
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-group">
+                    <label class="form-label">Price</label>
+                    <input v-model.number="form.price" type="number" class="form-control" min="0" step="0.01" />
+                  </div>
+                </div>
               </div>
               <div class="form-group">
-                <label>Category *</label>
-                <select v-model="form.category" required>
-                  <option value="">Select Category</option>
-                  <option v-for="cat in productCategories" :key="cat" :value="cat">{{ cat }}</option>
-                </select>
+                <label class="form-label">Low Stock Threshold</label>
+                <input v-model.number="form.low_stock_threshold" type="number" class="form-control" min="0" />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label">Description</label>
+                <textarea v-model="form.description" class="form-control" rows="3"></textarea>
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Quantity</label>
-                <input v-model.number="form.quantity" type="number" min="0" />
-              </div>
-              <div class="form-group">
-                <label>Price</label>
-                <input v-model.number="form.price" type="number" min="0" step="0.01" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Low Stock Threshold</label>
-              <input v-model.number="form.low_stock_threshold" type="number" min="0" />
-            </div>
-            <div class="form-group">
-              <label>Description</label>
-              <textarea v-model="form.description" rows="3"></textarea>
-            </div>
-            <div class="modal-actions">
-              <button type="button" class="btn-secondary" @click="closeModal">Cancel</button>
-              <button type="submit" class="btn-primary">{{ showEditModal ? 'Update' : 'Create' }}</button>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" @click="closeModal">Cancel</button>
+              <button type="submit" class="btn btn-primary" :disabled="submitting">
+                {{ submitting ? 'Saving...' : (showEditModal ? 'Update' : 'Create') }}
+              </button>
             </div>
           </form>
         </div>
@@ -126,6 +208,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
 
 export default {
   name: 'Products',
@@ -139,6 +222,7 @@ export default {
     const showAddModal = ref(false)
     const showEditModal = ref(false)
     const editingProductId = ref(null)
+    const submitting = ref(false)
     
     const form = ref({
       name: '',
@@ -193,25 +277,31 @@ export default {
       if (!confirm('Are you sure you want to delete this product?')) return
       try {
         await store.dispatch('products/deleteProduct', productId)
+        showSuccess('Product deleted successfully')
       } catch (error) {
-        alert('Failed to delete product')
+        showError('Failed to delete product')
       }
     }
     
     const handleSubmit = async () => {
+      submitting.value = true
       try {
         if (showEditModal.value) {
           await store.dispatch('products/updateProduct', {
             id: editingProductId.value,
             data: form.value
           })
+          showSuccess('Product updated successfully')
         } else {
           await store.dispatch('products/createProduct', form.value)
+          showSuccess('Product created successfully')
         }
         closeModal()
         fetchProducts()
       } catch (error) {
-        alert(error.response?.data?.detail || 'Operation failed')
+        showError(error.response?.data?.detail || 'Operation failed')
+      } finally {
+        submitting.value = false
       }
     }
     
@@ -219,6 +309,7 @@ export default {
       showAddModal.value = false
       showEditModal.value = false
       editingProductId.value = null
+      submitting.value = false
       form.value = {
         name: '',
         sku: '',
@@ -245,6 +336,7 @@ export default {
       products,
       productCategories,
       loading,
+      submitting,
       handleSearch,
       handleFilter,
       editProduct,
@@ -258,233 +350,173 @@ export default {
 
 <style scoped>
 .products-page {
-  max-width: 1200px;
+  padding: 24px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 24px;
+}
+
+.page-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .page-title {
   font-size: 28px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--gray-900);
+  margin: 0;
 }
 
-.btn-primary {
-  padding: 12px 24px;
-  background: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background: #4338ca;
-}
-
-.filters {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  align-items: center;
-}
-
-.search-box input {
-  width: 300px;
-  padding: 10px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.filters select {
-  padding: 10px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  background: white;
-}
-
-.checkbox {
+.breadcrumb {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
+}
+
+.breadcrumb a {
+  color: var(--gray-500);
+}
+
+.breadcrumb .separator {
+  color: var(--gray-400);
+}
+
+.breadcrumb .current {
+  color: var(--gray-700);
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box svg {
+  position: absolute;
+  left: 14px;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.search-box .form-control {
+  padding-left: 44px;
+  width: 250px;
+}
+
+.card-header {
+  flex-direction: row;
+}
+
+.checkbox-wrapper input {
+  width: 16px;
+  height: 16px;
   cursor: pointer;
 }
 
-.products-table {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  overflow: hidden;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 16px;
-  text-align: left;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-th {
-  font-weight: 600;
-  color: #6b7280;
+.sku-code {
+  font-family: 'Courier New', monospace;
   font-size: 12px;
-  text-transform: uppercase;
-  background: #f9fafb;
-}
-
-tbody tr:hover {
-  background: #f9fafb;
-}
-
-.sku {
-  font-family: monospace;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.category-tag {
-  padding: 4px 10px;
-  background: #e0e7ff;
-  color: #4f46e5;
+  background: var(--gray-100);
+  padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  color: var(--gray-700);
 }
 
-.quantity {
+.fw-600 {
   font-weight: 600;
 }
 
-.quantity.low-stock {
-  color: #dc2626;
-}
-
-.status {
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.status.active {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.status.inactive {
-  background: #f3f4f6;
-  color: #6b7280;
+.ml-2 {
+  margin-left: 8px;
 }
 
 .btn-icon {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
   padding: 4px;
-  margin-right: 8px;
+  color: var(--gray-500);
+  transition: var(--transition);
 }
 
-.loading {
+.btn-icon:hover {
+  color: var(--gray-700);
+}
+
+.btn-outline-danger:hover {
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.py-5 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+  border: 0.25em solid rgba(115, 103, 240, 0.2);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
   text-align: center;
-  padding: 48px;
-  color: #6b7280;
+  padding: 60px 20px;
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+.empty-state svg {
+  opacity: 0.4;
 }
 
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 32px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
+.empty-state h4 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: var(--gray-800);
 }
 
-.modal h2 {
-  margin-bottom: 24px;
-  font-size: 20px;
+.empty-state p {
+  color: var(--gray-500);
+  margin-bottom: 20px;
 }
 
-.form-group {
-  margin-bottom: 16px;
+.text-right {
+  text-align: right;
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+.text-danger {
+  color: var(--danger-color);
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #4f46e5;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 24px;
-}
-
-.btn-secondary {
-  padding: 10px 20px;
-  background: #f3f4f6;
-  color: #374151;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background: #e5e7eb;
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .search-box .form-control {
+    width: 100%;
+  }
 }
 </style>

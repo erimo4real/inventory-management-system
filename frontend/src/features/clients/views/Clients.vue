@@ -2,107 +2,227 @@
   <AppLayout>
     <div class="clients-page">
       <div class="page-header">
-        <h1 class="page-title">Clients</h1>
-        <button v-if="canManage" class="btn-primary" @click="showAddModal = true">
-          + Add Client
+        <div class="page-title-area">
+          <h1 class="page-title">Clients</h1>
+          <nav class="breadcrumb">
+            <router-link to="/">Dashboard</router-link>
+            <span class="separator">/</span>
+            <span class="current">Clients</span>
+          </nav>
+        </div>
+        <button v-if="canManage" class="btn btn-primary" @click="showAddModal = true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Client
         </button>
       </div>
       
-      <div class="stats-row">
-        <div class="stat-card">
-          <span class="stat-number">{{ stats?.total_clients || 0 }}</span>
-          <span class="stat-label">Total Clients</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">{{ stats?.new_this_month || 0 }}</span>
-          <span class="stat-label">New This Month</span>
-        </div>
-      </div>
-      
-      <div class="filters">
-        <div class="search-box">
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Search clients..."
-            @input="handleSearch"
-          />
-        </div>
-      </div>
-      
-      <div v-if="loading" class="loading">Loading...</div>
-      
-      <div v-else class="clients-grid">
-        <div v-for="client in clients" :key="client.id" class="client-card" @click="viewClient(client)">
-          <div class="client-avatar">
-            {{ client.name.charAt(0).toUpperCase() }}
-          </div>
-          <div class="client-info">
-            <h3>{{ client.name }}</h3>
-            <p v-if="client.company_name" class="company">{{ client.company_name }}</p>
-            <div class="client-meta">
-              <span v-if="client.email">📧 {{ client.email }}</span>
-              <span v-if="client.phone">📞 {{ client.phone }}</span>
+      <div class="row mb-4">
+        <div class="col-6">
+          <div class="stat-card">
+            <div class="stat-icon primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <h3>{{ stats?.total_clients || 0 }}</h3>
+              <p>Total Clients</p>
             </div>
           </div>
-          <div class="client-actions" v-if="canManage" @click.stop>
-            <button class="btn-icon" @click="editClient(client)">✏️</button>
-            <button class="btn-icon" @click="deleteClient(client.id)">🗑️</button>
+        </div>
+        <div class="col-6">
+          <div class="stat-card">
+            <div class="stat-icon success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <h3>{{ stats?.new_this_month || 0 }}</h3>
+              <p>New This Month</p>
+            </div>
           </div>
         </div>
       </div>
       
-      <div v-if="!loading && !clients.length" class="empty-state">
-        No clients found
+      <div class="card">
+        <div class="card-header">
+          <div class="search-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              class="form-control" 
+              placeholder="Search clients..."
+              @input="handleSearch"
+            />
+          </div>
+        </div>
+        
+        <div v-if="loading" class="card-body">
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+          </div>
+        </div>
+        
+        <div v-else-if="clients.length" class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Company</th>
+                  <th>Contact</th>
+                  <th>Location</th>
+                  <th v-if="canManage" class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="client in clients" :key="client.id" class="cursor-pointer" @click="viewClient(client)">
+                  <td>
+                    <div class="d-flex align-center gap-3">
+                      <div class="avatar">
+                        {{ client.name.charAt(0).toUpperCase() }}
+                      </div>
+                      <div>
+                        <div class="fw-600">{{ client.name }}</div>
+                        <div v-if="client.contact_person" class="text-muted small">{{ client.contact_person }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ client.company_name || '-' }}</td>
+                  <td>
+                    <div v-if="client.email" class="small">{{ client.email }}</div>
+                    <div v-if="client.phone" class="text-muted small">{{ client.phone }}</div>
+                  </td>
+                  <td>
+                    <span v-if="client.city || client.country">
+                      {{ [client.city, client.country].filter(Boolean).join(', ') }}
+                    </span>
+                    <span v-else class="text-muted">-</span>
+                  </td>
+                  <td v-if="canManage" class="text-right" @click.stop>
+                    <div class="d-flex gap-2 justify-end">
+                      <button class="btn btn-sm btn-outline" @click="editClient(client)" title="Edit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button class="btn btn-sm btn-outline btn-outline-danger" @click="deleteClient(client.id)" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div v-else class="card-body">
+          <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-muted mb-3">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <h4>No clients found</h4>
+            <p>Get started by adding your first client</p>
+            <button v-if="canManage" class="btn btn-primary" @click="showAddModal = true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Client
+            </button>
+          </div>
+        </div>
       </div>
       
-      <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
+      <div v-if="showAddModal || showEditModal" class="modal-backdrop" @click="closeModal">
         <div class="modal" @click.stop>
-          <h2>{{ showEditModal ? 'Edit Client' : 'Add Client' }}</h2>
+          <div class="modal-header">
+            <h3>{{ showEditModal ? 'Edit Client' : 'Add Client' }}</h3>
+            <button class="btn-icon" @click="closeModal">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
           <form @submit.prevent="handleSubmit">
-            <div class="form-group">
-              <label>Name *</label>
-              <input v-model="form.name" type="text" required />
-            </div>
-            <div class="form-group">
-              <label>Company Name</label>
-              <input v-model="form.company_name" type="text" />
-            </div>
-            <div class="form-group">
-              <label>Contact Person</label>
-              <input v-model="form.contact_person" type="text" />
-            </div>
-            <div class="form-row">
+            <div class="modal-body">
               <div class="form-group">
-                <label>Email</label>
-                <input v-model="form.email" type="email" />
+                <label class="form-label">Name *</label>
+                <input v-model="form.name" type="text" class="form-control" required />
               </div>
               <div class="form-group">
-                <label>Phone</label>
-                <input v-model="form.phone" type="tel" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>City</label>
-                <input v-model="form.city" type="text" />
+                <label class="form-label">Company Name</label>
+                <input v-model="form.company_name" type="text" class="form-control" />
               </div>
               <div class="form-group">
-                <label>Country</label>
-                <input v-model="form.country" type="text" />
+                <label class="form-label">Contact Person</label>
+                <input v-model="form.contact_person" type="text" class="form-control" />
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input v-model="form.email" type="email" class="form-control" />
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input v-model="form.phone" type="tel" class="form-control" />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input v-model="form.city" type="text" class="form-control" />
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-group">
+                    <label class="form-label">Country</label>
+                    <input v-model="form.country" type="text" class="form-control" />
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <textarea v-model="form.address" class="form-control" rows="2"></textarea>
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label">Notes</label>
+                <textarea v-model="form.notes" class="form-control" rows="2"></textarea>
               </div>
             </div>
-            <div class="form-group">
-              <label>Address</label>
-              <textarea v-model="form.address" rows="2"></textarea>
-            </div>
-            <div class="form-group">
-              <label>Notes</label>
-              <textarea v-model="form.notes" rows="2"></textarea>
-            </div>
-            <div class="modal-actions">
-              <button type="button" class="btn-secondary" @click="closeModal">Cancel</button>
-              <button type="submit" class="btn-primary">{{ showEditModal ? 'Update' : 'Create' }}</button>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" @click="closeModal">Cancel</button>
+              <button type="submit" class="btn btn-primary" :disabled="submitting">
+                {{ submitting ? 'Saving...' : (showEditModal ? 'Update' : 'Create') }}
+              </button>
             </div>
           </form>
         </div>
@@ -116,6 +236,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
 
 export default {
   name: 'Clients',
@@ -129,6 +250,7 @@ export default {
     const showEditModal = ref(false)
     const editingClientId = ref(null)
     const stats = ref(null)
+    const submitting = ref(false)
     
     const form = ref({
       name: '',
@@ -194,27 +316,33 @@ export default {
       if (!confirm('Are you sure you want to delete this client?')) return
       try {
         await store.dispatch('clients/deleteClient', clientId)
+        showSuccess('Client deleted successfully')
         fetchStats()
       } catch (error) {
-        alert('Failed to delete client')
+        showError('Failed to delete client')
       }
     }
     
     const handleSubmit = async () => {
+      submitting.value = true
       try {
         if (showEditModal.value) {
           await store.dispatch('clients/updateClient', {
             id: editingClientId.value,
             data: form.value
           })
+          showSuccess('Client updated successfully')
         } else {
           await store.dispatch('clients/createClient', form.value)
+          showSuccess('Client created successfully')
         }
         closeModal()
         fetchClients()
         fetchStats()
       } catch (error) {
-        alert(error.response?.data?.error || error.response?.data?.detail || 'Operation failed')
+        showError(error.response?.data?.error || error.response?.data?.detail || 'Operation failed')
+      } finally {
+        submitting.value = false
       }
     }
     
@@ -222,6 +350,7 @@ export default {
       showAddModal.value = false
       showEditModal.value = false
       editingClientId.value = null
+      submitting.value = false
       form.value = {
         name: '',
         company_name: '',
@@ -249,6 +378,7 @@ export default {
       loading,
       stats,
       canManage,
+      submitting,
       handleSearch,
       viewClient,
       editClient,
@@ -262,239 +392,168 @@ export default {
 
 <style scoped>
 .clients-page {
-  max-width: 1200px;
+  padding: 24px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 24px;
+}
+
+.page-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .page-title {
   font-size: 28px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--gray-900);
+  margin: 0;
 }
 
-.stats-row {
+.breadcrumb {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: white;
-  padding: 20px 32px;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.stat-number {
-  font-size: 32px;
-  font-weight: 700;
-  color: #4f46e5;
-}
-
-.stat-label {
+  gap: 8px;
   font-size: 13px;
-  color: #6b7280;
-  margin-top: 4px;
 }
 
-.btn-primary {
-  padding: 12px 24px;
-  background: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
+.breadcrumb a {
+  color: var(--gray-500);
 }
 
-.btn-primary:hover {
-  background: #4338ca;
+.breadcrumb .separator {
+  color: var(--gray-400);
 }
 
-.filters {
-  margin-bottom: 24px;
+.breadcrumb .current {
+  color: var(--gray-700);
 }
 
-.search-box input {
-  width: 300px;
-  padding: 10px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.clients-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
-}
-
-.client-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  display: flex;
-  gap: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.client-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transform: translateY(-2px);
-}
-
-.client-avatar {
-  width: 56px;
-  height: 56px;
+.avatar {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 600;
   flex-shrink: 0;
 }
 
-.client-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.client-info h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin: 0 0 4px 0;
-}
-
-.client-info .company {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0 0 8px 0;
-}
-
-.client-meta {
+.search-box {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: #6b7280;
+  align-items: center;
 }
 
-.client-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.search-box svg {
+  position: absolute;
+  left: 14px;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.search-box .form-control {
+  padding-left: 44px;
+  width: 300px;
+}
+
+.card-header {
+  flex-direction: row;
 }
 
 .btn-icon {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
   padding: 4px;
+  color: var(--gray-500);
+  transition: var(--transition);
 }
 
-.loading, .empty-state {
+.btn-icon:hover {
+  color: var(--gray-700);
+}
+
+.btn-outline-danger:hover {
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.fw-600 {
+  font-weight: 600;
+}
+
+.small {
+  font-size: 13px;
+}
+
+.py-5 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+  border: 0.25em solid rgba(115, 103, 240, 0.2);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
   text-align: center;
-  padding: 48px;
-  color: #6b7280;
+  padding: 60px 20px;
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+.empty-state svg {
+  opacity: 0.4;
 }
 
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 32px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
+.empty-state h4 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: var(--gray-800);
 }
 
-.modal h2 {
-  margin-bottom: 24px;
-  font-size: 20px;
+.empty-state p {
+  color: var(--gray-500);
+  margin-bottom: 20px;
 }
 
-.form-group {
-  margin-bottom: 16px;
+.text-right {
+  text-align: right;
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #4f46e5;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 24px;
-}
-
-.btn-secondary {
-  padding: 10px 20px;
-  background: #f3f4f6;
-  color: #374151;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background: #e5e7eb;
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .search-box .form-control {
+    width: 100%;
+  }
 }
 </style>
