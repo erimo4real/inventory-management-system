@@ -35,7 +35,7 @@ const mutations = {
 }
 
 const actions = {
-  async login({ commit }, { email, password }) {
+  async login({ commit, dispatch }, { email, password }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
@@ -44,6 +44,7 @@ const actions = {
       Cookies.set('token', token, { expires: 7 })
       Cookies.set('user', JSON.stringify(user), { expires: 7 })
       commit('SET_USER', user)
+      await dispatch('sites/initializeSite', null, { root: true })
       return user
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.error || 'Login failed')

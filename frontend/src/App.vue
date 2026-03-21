@@ -8,6 +8,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import ToastContainer from '@/shared/components/ToastContainer.vue'
 import Loading from '@/features/loading/views/Loading.vue'
 
@@ -15,12 +16,14 @@ export default {
   name: 'App',
   components: { ToastContainer, Loading },
   setup() {
+    const store = useStore()
     const isLoading = ref(true)
 
-    onMounted(() => {
+    onMounted(async () => {
+      await store.dispatch('auth/initAuth')
       setTimeout(() => {
         isLoading.value = false
-      }, 1500)
+      }, 500)
     })
 
     return { isLoading }
