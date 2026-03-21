@@ -1,27 +1,45 @@
 <template>
-  <div class="auth-page">
-    <div class="auth-container">
-      <div class="auth-card">
-        <div class="auth-header">
-          <div class="logo">
-            <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
-              <path d="M10 16L14 20L22 12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-              <defs>
-                <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32">
-                  <stop stop-color="#7367f0"/>
-                  <stop offset="1" stop-color="#9e8cfc"/>
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <h1>Forgot Password?</h1>
-          <p>Enter your email and we'll send you a reset link</p>
+  <div class="auth-wrapper">
+    <!-- Left Side - Image -->
+    <div class="auth-side left-side">
+      <div class="side-overlay"></div>
+      <div class="side-content">
+        <div class="brand-logo">
+          <svg width="86" height="48" viewBox="0 0 34 24" fill="none">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M0.00183571 0.3125V7.59485C0.00183571 7.59485 -0.141502 9.88783 2.10473 11.8288L14.5469 23.6837L21.0172 23.6005L19.9794 10.8126L17.5261 7.93369L9.81536 0.3125H0.00183571Z"
+              fill="white"/>
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M8.25781 17.6914L25.1339 0.3125H33.9991V7.62657C33.9991 7.62657 33.8144 10.0645 32.5743 11.3686L21.0179 23.6875H14.5487L8.25781 17.6914Z"
+              fill="rgba(255,255,255,0.7)"/>
+          </svg>
+          <span class="brand-name">SIMS</span>
         </div>
+        
+        <div class="side-text">
+          <h1>Reset Your Password</h1>
+          <p>Don't worry, we'll send you an email with instructions to reset your password.</p>
+        </div>
+      </div>
+    </div>
 
-        <form v-if="!emailSent" @submit.prevent="handleForgotPassword" class="auth-form">
+    <!-- Right Side - Forgot Password Form -->
+    <div class="auth-side right-side">
+      <div class="auth-form-wrapper">
+        <div class="auth-form-container">
+          <div class="form-header">
+            <div class="form-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h1>Forgot Password? 🔒</h1>
+            <p>Enter your email and we'll send you a link to reset your password</p>
+          </div>
+
           <div v-if="error" class="alert alert-danger">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>
               <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -29,54 +47,53 @@
             {{ error }}
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
+          <div v-if="emailSent" class="success-state">
+            <div class="success-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
-              <input
-                v-model="form.email"
-                type="email"
-                class="form-control"
-                placeholder="admin@example.com"
-                required
-              />
             </div>
+            <h3>Mail sent! ✉️</h3>
+            <p>We've sent an email to <strong>{{ form.email }}</strong> with instructions to reset your password.</p>
+            <button @click="resetForm" class="btn btn-outline">Didn't receive the email? Resend</button>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-lg w-100" :disabled="loading">
-            <span v-if="loading" class="spinner"></span>
-            <span v-else>Send Reset Link</span>
-          </button>
-        </form>
+          <form v-else @submit.prevent="handleSubmit" class="auth-form">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <div class="input-with-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <input
+                  v-model="form.email"
+                  type="email"
+                  class="form-control"
+                  placeholder="john@example.com"
+                  required
+                />
+              </div>
+            </div>
 
-        <div v-else class="success-state">
-          <div class="success-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
+            <button type="submit" class="btn btn-primary btn-lg w-100" :disabled="loading">
+              <span v-if="loading" class="spinner"></span>
+              <span v-else>Send Reset Link</span>
+            </button>
+          </form>
+
+          <div class="auth-footer">
+            <router-link to="/login" class="back-link">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+              </svg>
+              Back to login
+            </router-link>
           </div>
-          <h3>Check Your Email</h3>
-          <p>If an account exists with <strong>{{ form.email }}</strong>, you will receive a password reset link shortly.</p>
-          <button @click="emailSent = false" class="btn btn-outline">Send Again</button>
-        </div>
-
-        <div class="auth-footer">
-          <router-link to="/login" class="back-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="19" y1="12" x2="5" y2="12"/>
-              <polyline points="12 19 5 12 12 5"/>
-            </svg>
-            Back to Login
-          </router-link>
         </div>
       </div>
-    </div>
-    <div class="auth-bg">
-      <div class="bg-pattern"></div>
     </div>
   </div>
 </template>
@@ -90,85 +107,133 @@ export default {
   setup() {
     const form = ref({ email: '' })
     const loading = ref(false)
-    const emailSent = ref(false)
     const error = ref('')
+    const emailSent = ref(false)
 
-    const handleForgotPassword = async () => {
+    const handleSubmit = async () => {
       loading.value = true
       error.value = ''
       try {
         await authAPI.forgotPassword(form.value.email)
         emailSent.value = true
       } catch (err) {
-        error.value = err.response?.data?.error || 'Failed to send reset link'
+        error.value = err.response?.data?.error || 'Failed to send reset link. Please try again.'
       } finally {
         loading.value = false
       }
     }
 
-    return { form, loading, emailSent, error, handleForgotPassword }
+    const resetForm = () => {
+      emailSent.value = false
+      error.value = ''
+    }
+
+    return { form, loading, error, emailSent, handleSubmit, resetForm }
   }
 }
 </script>
 
 <style scoped>
-.auth-page {
-  min-height: 100vh;
+.auth-wrapper {
   display: flex;
+  min-height: 100vh;
+}
+
+/* Left Side - Image */
+.auth-side.left-side {
+  flex: 1.2;
+  background: url('/images/forgot-bg.jpg') center/cover no-repeat;
   position: relative;
-  overflow: hidden;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.auth-bg {
+.side-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #7367f0 0%, #9e8cfc 50%, #a78bfa 100%);
-  z-index: 0;
+  background: linear-gradient(135deg, rgba(115, 103, 240, 0.9) 0%, rgba(158, 140, 252, 0.85) 100%);
 }
 
-.bg-pattern {
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+.side-content {
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
 }
 
-.auth-container {
-  flex: 1;
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 60px;
+}
+
+.brand-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 2px;
+}
+
+.side-text h1 {
+  font-size: 40px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.side-text p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+}
+
+/* Right Side - Form */
+.auth-side.right-side {
+  flex: 0.8;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  position: relative;
-  z-index: 1;
+  padding: 60px;
+  background: #f8f7fa;
 }
 
-.auth-card {
-  background: var(--white);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-lg);
+.auth-form-wrapper {
   width: 100%;
-  max-width: 420px;
-  padding: 40px;
+  max-width: 400px;
 }
 
-.auth-header {
+.auth-form-container {
+  width: 100%;
+}
+
+.form-header {
   text-align: center;
   margin-bottom: 32px;
 }
 
-.auth-header .logo {
-  margin-bottom: 16px;
-  display: inline-block;
+.form-icon {
+  width: 80px;
+  height: 80px;
+  background: rgba(115, 103, 240, 0.1);
+  color: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
 }
 
-.auth-header h1 {
+.form-header h1 {
   font-size: 24px;
   font-weight: 700;
   color: var(--gray-900);
   margin-bottom: 8px;
 }
 
-.auth-header p {
+.form-header p {
   color: var(--gray-500);
   font-size: 14px;
 }
@@ -177,19 +242,32 @@ export default {
   margin-bottom: 24px;
 }
 
-.input-wrapper {
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.input-with-icon {
   position: relative;
 }
 
-.input-icon {
+.input-with-icon > svg:first-child {
   position: absolute;
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--gray-500);
+  color: var(--gray-400);
+  pointer-events: none;
 }
 
-.form-control {
+.input-with-icon .form-control {
   padding-left: 44px;
 }
 
@@ -212,6 +290,26 @@ export default {
   to { transform: rotate(360deg); }
 }
 
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gray-600);
+  font-size: 14px;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.back-link:hover {
+  color: var(--primary-color);
+}
+
+/* Success State */
 .success-state {
   text-align: center;
   padding: 20px 0;
@@ -242,30 +340,32 @@ export default {
   margin-bottom: 24px;
 }
 
-.auth-footer {
-  text-align: center;
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--gray-200);
+.success-state strong {
+  color: var(--gray-800);
 }
 
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--gray-600);
-  font-size: 14px;
-  text-decoration: none;
-  transition: var(--transition);
-}
-
-.back-link:hover {
-  color: var(--primary-color);
-}
-
-@media (max-width: 480px) {
-  .auth-card {
-    padding: 24px;
+/* Responsive */
+@media (max-width: 992px) {
+  .auth-wrapper {
+    flex-direction: column;
+  }
+  
+  .auth-side.left-side {
+    flex: none;
+    padding: 40px;
+    min-height: 200px;
+  }
+  
+  .side-text h1 {
+    font-size: 28px;
+  }
+  
+  .brand-logo {
+    margin-bottom: 30px;
+  }
+  
+  .auth-side.right-side {
+    padding: 40px 24px;
   }
 }
 </style>

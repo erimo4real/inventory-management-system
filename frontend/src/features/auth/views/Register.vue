@@ -17,51 +17,48 @@
         </div>
         
         <div class="side-text">
-          <h1>Smart Inventory Management</h1>
-          <p>Streamline your business operations with our powerful, real-time inventory tracking solution.</p>
+          <h1>Join SIMS Today</h1>
+          <p>Create your account and start managing your inventory efficiently with our powerful platform.</p>
         </div>
         
         <div class="features-list">
           <div class="feature-item">
             <div class="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
               </svg>
             </div>
-            <span>Real-time Inventory Tracking</span>
+            <span>Track Products & Stock</span>
           </div>
           <div class="feature-item">
             <div class="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
               </svg>
             </div>
-            <span>Multi-user Access Control</span>
+            <span>Manage Multiple Sites</span>
           </div>
           <div class="feature-item">
             <div class="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10"/>
-                <line x1="12" y1="20" x2="12" y2="4"/>
-                <line x1="6" y1="20" x2="6" y2="14"/>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
             </div>
-            <span>Comprehensive Reports</span>
+            <span>Secure & Reliable</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Right Side - Login Form -->
+    <!-- Right Side - Register Form -->
     <div class="auth-side right-side">
       <div class="auth-form-wrapper">
         <div class="auth-form-container">
           <div class="form-header">
-            <h1>Sign in</h1>
-            <p>Please sign-in to your account and start the adventure</p>
+            <h1>Adventure starts here 🚀</h1>
+            <p>Make your app management easy and fun!</p>
           </div>
 
           <div v-if="error" class="alert alert-danger">
@@ -73,7 +70,32 @@
             {{ error }}
           </div>
 
+          <div v-if="success" class="alert alert-success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            {{ success }}
+          </div>
+
           <form @submit.prevent="handleSubmit" class="auth-form">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <div class="input-with-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input
+                  v-model="form.name"
+                  type="text"
+                  class="form-control"
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">Email</label>
               <div class="input-with-icon">
@@ -92,10 +114,7 @@
             </div>
 
             <div class="form-group">
-              <div class="label-row">
-                <label class="form-label">Password</label>
-                <router-link to="/forgot-password" class="forgot-link">Forgot Password?</router-link>
-              </div>
+              <label class="form-label">Password</label>
               <div class="input-with-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -105,8 +124,9 @@
                   v-model="form.password"
                   :type="showPassword ? 'text' : 'password'"
                   class="form-control"
-                  placeholder="Enter your password"
+                  placeholder="Enter password"
                   required
+                  minlength="6"
                 />
                 <button type="button" class="toggle-password" @click="showPassword = !showPassword">
                   <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -114,7 +134,34 @@
                     <circle cx="12" cy="12" r="3"/>
                   </svg>
                   <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <div class="input-with-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input
+                  v-model="form.confirmPassword"
+                  :type="showConfirmPassword ? 'text' : 'password'"
+                  class="form-control"
+                  placeholder="Confirm password"
+                  required
+                />
+                <button type="button" class="toggle-password" @click="showConfirmPassword = !showConfirmPassword">
+                  <svg v-if="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
                     <line x1="1" y1="1" x2="23" y2="23"/>
                   </svg>
                 </button>
@@ -123,30 +170,20 @@
 
             <div class="form-group-inline">
               <label class="checkbox-wrapper">
-                <input type="checkbox" v-model="form.remember" />
+                <input type="checkbox" v-model="form.terms" required />
                 <span class="checkmark"></span>
-                <span class="checkbox-label">Remember me</span>
+                <span class="checkbox-label">I agree to <a href="#" class="link">Privacy Policy & Terms</a></span>
               </label>
             </div>
 
             <button type="submit" class="btn btn-primary btn-lg w-100" :disabled="loading">
               <span v-if="loading" class="spinner"></span>
-              <span v-else>Sign in</span>
+              <span v-else>Sign up</span>
             </button>
           </form>
 
           <div class="auth-footer">
-            <p>New on our platform? <router-link to="/register" class="link">Create an account</router-link></p>
-          </div>
-
-          <div class="demo-credentials">
-            <p class="demo-title">Demo Credentials</p>
-            <div class="demo-users">
-              <button type="button" @click="fillCredentials('admin@example.com')" class="demo-btn">Admin</button>
-              <button type="button" @click="fillCredentials('manager@example.com')" class="demo-btn">Manager</button>
-              <button type="button" @click="fillCredentials('staff@example.com')" class="demo-btn">Staff</button>
-            </div>
-            <p class="demo-password">Password: admin123</p>
+            <p>Already have an account? <router-link to="/login" class="link">Sign in instead</router-link></p>
           </div>
         </div>
       </div>
@@ -155,49 +192,71 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
 export default {
-  name: 'Login',
+  name: 'Register',
   setup() {
     const store = useStore()
     const router = useRouter()
     
     const showPassword = ref(false)
+    const showConfirmPassword = ref(false)
+    const error = ref('')
+    const success = ref('')
+    const loading = ref(false)
+    
     const form = ref({
+      name: '',
       email: '',
       password: '',
-      remember: false
+      confirmPassword: '',
+      terms: false
     })
     
-    const loading = computed(() => store.getters['auth/authLoading'])
-    const error = computed(() => store.getters['auth/authError'])
-    
-    const fillCredentials = (email) => {
-      form.value.email = email
-      form.value.password = 'admin123'
-    }
-    
     const handleSubmit = async () => {
+      error.value = ''
+      success.value = ''
+      
+      if (form.value.password !== form.value.confirmPassword) {
+        error.value = 'Passwords do not match'
+        return
+      }
+      
+      if (form.value.password.length < 6) {
+        error.value = 'Password must be at least 6 characters'
+        return
+      }
+      
+      loading.value = true
+      
       try {
-        await store.dispatch('auth/login', {
+        await store.dispatch('auth/register', {
+          name: form.value.name,
           email: form.value.email,
-          password: form.value.password
+          password: form.value.password,
+          role: 'staff'
         })
-        router.push('/')
+        success.value = 'Account created successfully! Redirecting to login...'
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
       } catch (err) {
-        // Error handled by store
+        error.value = err.response?.data?.error || 'Registration failed. Please try again.'
+      } finally {
+        loading.value = false
       }
     }
     
     return {
       form,
       showPassword,
-      loading,
+      showConfirmPassword,
       error,
-      fillCredentials,
+      success,
+      loading,
       handleSubmit
     }
   }
@@ -293,12 +352,12 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 60px;
-  background: white;
+  background: #f8f7fa;
 }
 
 .auth-form-wrapper {
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
 }
 
 .auth-form-container {
@@ -310,7 +369,7 @@ export default {
 }
 
 .form-header h1 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--gray-900);
   margin-bottom: 8px;
@@ -326,14 +385,7 @@ export default {
 }
 
 .form-group {
-  margin-bottom: 24px;
-}
-
-.label-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
 }
 
 .form-label {
@@ -342,15 +394,6 @@ export default {
   font-weight: 500;
   color: var(--gray-700);
   margin-bottom: 8px;
-}
-
-.label-row .form-label {
-  margin-bottom: 0;
-}
-
-.forgot-link {
-  font-size: 13px;
-  color: var(--primary-color);
 }
 
 .input-with-icon {
@@ -368,6 +411,7 @@ export default {
 
 .input-with-icon .form-control {
   padding-left: 44px;
+  padding-right: 44px;
 }
 
 .toggle-password {
@@ -412,6 +456,7 @@ export default {
   align-items: center;
   justify-content: center;
   transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .checkbox-wrapper input:checked + .checkmark {
@@ -432,6 +477,10 @@ export default {
 .checkbox-label {
   font-size: 13px;
   color: var(--gray-600);
+}
+
+.checkbox-label .link {
+  color: var(--primary-color);
 }
 
 .btn-lg {
@@ -457,59 +506,11 @@ export default {
   text-align: center;
   color: var(--gray-600);
   font-size: 14px;
-  margin-bottom: 24px;
 }
 
 .link {
   color: var(--primary-color);
   font-weight: 500;
-}
-
-.demo-credentials {
-  padding: 20px;
-  background: var(--gray-50);
-  border-radius: var(--border-radius);
-  text-align: center;
-  border: 1px solid var(--gray-200);
-}
-
-.demo-title {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--gray-500);
-  margin-bottom: 12px;
-}
-
-.demo-users {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.demo-btn {
-  padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 500;
-  background: white;
-  color: var(--gray-700);
-  border: 1px solid var(--gray-200);
-  border-radius: 20px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.demo-btn:hover {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.demo-password {
-  font-size: 12px;
-  color: var(--gray-500);
 }
 
 /* Responsive */
@@ -521,7 +522,7 @@ export default {
   .auth-side.left-side {
     flex: none;
     padding: 40px;
-    min-height: 300px;
+    min-height: 250px;
   }
   
   .side-text h1 {
