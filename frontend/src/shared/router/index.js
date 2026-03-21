@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import Cookies from 'js-cookie'
 
 const routes = [
   {
@@ -108,7 +109,8 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = document.cookie.includes('token')
+  const token = Cookies.get('token')
+  const isAuthenticated = !!token
   
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')

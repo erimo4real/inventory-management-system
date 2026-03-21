@@ -69,22 +69,27 @@ const actions = {
   },
 
   async initializeSite({ dispatch }) {
-    const savedSiteId = Cookies.get('site_id')
-    if (savedSiteId) {
-      try {
-        const sites = await dispatch('fetchMySites')
-        const site = sites.find(s => s.id.toString() === savedSiteId)
-        if (site) {
-          await dispatch('setCurrentSite', site)
-          return
-        }
-      } catch (error) {
-        console.error('Failed to initialize site:', error)
+    try {
+      const savedSiteId = Cookies.get('site_id')
+      let sites = await dispatch('fetchMySites')
+      
+      if (!sites || sites.length === 0) {
+        console.error('No sites found for user')
+        return
       }
-    }
-    const sites = await dispatch('fetchMySites')
-    if (sites && sites.length > 0) {
-      await dispatch('setCurrentSite', sites[0])
+      
+      let site
+      if (savedSiteId) {
+        site = sites.find(s => s.id.toString() === savedSiteId)
+      }
+      
+      if (!site) {
+        site = sites[0]
+      }
+      
+      await dispatch('setCurrentSite', site)
+    } catch (error) {
+      console.error('Failed to initialize site:', error)
     }
   },
 
