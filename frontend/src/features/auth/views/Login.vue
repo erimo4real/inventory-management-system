@@ -1,25 +1,69 @@
 <template>
-  <div class="auth-page">
-    <div class="auth-container">
-      <div class="auth-card">
-        <div class="auth-header">
-          <div class="logo">
-            <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
-              <path d="M10 16L14 20L22 12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-              <defs>
-                <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32">
-                  <stop stop-color="#7367f0"/>
-                  <stop offset="1" stop-color="#9e8cfc"/>
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <h1>SIMS</h1>
-          <p>Smart Inventory Management System</p>
+  <div class="auth-wrapper">
+    <!-- Left Side - Branding -->
+    <div class="auth-side left-side">
+      <div class="side-content">
+        <div class="brand-logo">
+          <svg width="86" height="48" viewBox="0 0 34 24" fill="none">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M0.00183571 0.3125V7.59485C0.00183571 7.59485 -0.141502 9.88783 2.10473 11.8288L14.5469 23.6837L21.0172 23.6005L19.9794 10.8126L17.5261 7.93369L9.81536 0.3125H0.00183571Z"
+              fill="white"/>
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M8.25781 17.6914L25.1339 0.3125H33.9991V7.62657C33.9991 7.62657 33.8144 10.0645 32.5743 11.3686L21.0179 23.6875H14.5487L8.25781 17.6914Z"
+              fill="rgba(255,255,255,0.7)"/>
+          </svg>
+          <span class="brand-name">SIMS</span>
         </div>
+        
+        <div class="side-text">
+          <h1>Welcome to SIMS! 👋</h1>
+          <p>Smart Inventory Management System - Streamline your business operations with our powerful inventory management solution.</p>
+        </div>
+        
+        <div class="features-list">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <span>Real-time Inventory Tracking</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <span>Multi-user Access Control</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+            </div>
+            <span>Comprehensive Reports</span>
+          </div>
+        </div>
+      </div>
+      <div class="side-pattern"></div>
+    </div>
 
-        <form @submit.prevent="handleSubmit" class="auth-form">
+    <!-- Right Side - Login Form -->
+    <div class="auth-side right-side">
+      <div class="auth-form-wrapper">
+        <div class="auth-form-container">
+          <div class="form-header">
+            <h1>Sign in</h1>
+            <p>Please sign-in to your account and start the adventure</p>
+          </div>
+
           <div v-if="error" class="alert alert-danger">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
@@ -29,84 +73,73 @@
             {{ error }}
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-              </svg>
+          <form @submit.prevent="handleSubmit" class="auth-form">
+            <div class="form-group">
+              <label class="form-label">Email</label>
               <input
                 v-model="form.email"
                 type="email"
                 class="form-control"
-                placeholder="admin@example.com"
+                placeholder="john@example.com"
                 required
               />
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <input
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'"
-                class="form-control"
-                placeholder="Enter your password"
-                required
-              />
-              <button type="button" class="toggle-password" @click="showPassword = !showPassword">
-                <svg v-if="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
-              </button>
+            <div class="form-group">
+              <div class="label-row">
+                <label class="form-label">Password</label>
+                <router-link to="/forgot-password" class="forgot-link">Forgot Password?</router-link>
+              </div>
+              <div class="password-wrapper">
+                <input
+                  v-model="form.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="form-control"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button type="button" class="toggle-password" @click="showPassword = !showPassword">
+                  <svg v-if="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
             </div>
+
+            <div class="form-group-inline">
+              <label class="checkbox-wrapper">
+                <input type="checkbox" v-model="form.remember" />
+                <span class="checkmark"></span>
+                <span class="checkbox-label">Remember me</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100" :disabled="loading">
+              <span v-if="loading" class="spinner"></span>
+              <span v-else>Sign in</span>
+            </button>
+          </form>
+
+          <div class="auth-footer">
+            <p>New on our platform? <router-link to="/login" class="link">Create an account</router-link></p>
           </div>
 
-          <div class="form-options">
-            <router-link to="/forgot-password" class="forgot-link">Forgot Password?</router-link>
+          <div class="demo-credentials">
+            <p class="demo-title">Demo Credentials</p>
+            <div class="demo-users">
+              <button type="button" @click="fillCredentials('admin@example.com')" class="demo-btn">Admin</button>
+              <button type="button" @click="fillCredentials('manager@example.com')" class="demo-btn">Manager</button>
+              <button type="button" @click="fillCredentials('staff@example.com')" class="demo-btn">Staff</button>
+            </div>
+            <p class="demo-password">Password: admin123</p>
           </div>
-
-          <button type="submit" class="btn btn-primary btn-lg w-100" :disabled="loading">
-            <span v-if="loading" class="spinner"></span>
-            <span v-else>{{ isRegistering ? 'Create Account' : 'Sign In' }}</span>
-          </button>
-        </form>
-
-        <div class="auth-footer">
-          <p v-if="!isRegistering">
-            Don't have an account?
-            <a @click="isRegistering = true" class="link">Create Account</a>
-          </p>
-          <p v-else>
-            Already have an account?
-            <a @click="isRegistering = false" class="link">Sign In</a>
-          </p>
-        </div>
-
-        <div class="demo-credentials">
-          <p class="demo-title">Demo Credentials</p>
-          <div class="demo-users">
-            <button type="button" @click="fillCredentials('admin@example.com')" class="demo-btn">Admin</button>
-            <button type="button" @click="fillCredentials('manager@example.com')" class="demo-btn">Manager</button>
-            <button type="button" @click="fillCredentials('staff@example.com')" class="demo-btn">Staff</button>
-          </div>
-          <p class="demo-password">Password: admin123</p>
         </div>
       </div>
-    </div>
-    <div class="auth-bg">
-      <div class="bg-pattern"></div>
     </div>
   </div>
 </template>
@@ -122,12 +155,11 @@ export default {
     const store = useStore()
     const router = useRouter()
     
-    const isRegistering = ref(false)
     const showPassword = ref(false)
     const form = ref({
       email: '',
       password: '',
-      name: ''
+      remember: false
     })
     
     const loading = computed(() => store.getters['auth/authLoading'])
@@ -140,19 +172,10 @@ export default {
     
     const handleSubmit = async () => {
       try {
-        if (isRegistering.value) {
-          await store.dispatch('auth/register', {
-            email: form.value.email,
-            password: form.value.password,
-            name: form.value.name,
-            role: 'staff'
-          })
-        } else {
-          await store.dispatch('auth/login', {
-            email: form.value.email,
-            password: form.value.password
-          })
-        }
+        await store.dispatch('auth/login', {
+          email: form.value.email,
+          password: form.value.password
+        })
         router.push('/')
       } catch (err) {
         // Error handled by store
@@ -161,7 +184,6 @@ export default {
     
     return {
       form,
-      isRegistering,
       showPassword,
       loading,
       error,
@@ -173,63 +195,120 @@ export default {
 </script>
 
 <style scoped>
-.auth-page {
-  min-height: 100vh;
+.auth-wrapper {
   display: flex;
+  min-height: 100vh;
+}
+
+/* Left Side - Branding */
+.auth-side.left-side {
+  flex: 1;
+  background: linear-gradient(135deg, #7367f0 0%, #9e8cfc 100%);
+  padding: 60px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.auth-bg {
+.side-pattern {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #7367f0 0%, #9e8cfc 50%, #a78bfa 100%);
-  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
 }
 
-.bg-pattern {
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+.side-content {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
 }
 
-.auth-container {
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 60px;
+}
+
+.brand-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 2px;
+}
+
+.side-text h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.side-text p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: white;
+  font-size: 15px;
+}
+
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Right Side - Form */
+.auth-side.right-side {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  position: relative;
-  z-index: 1;
+  padding: 60px;
+  background: white;
 }
 
-.auth-card {
-  background: var(--white);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-lg);
+.auth-form-wrapper {
   width: 100%;
-  max-width: 420px;
-  padding: 40px;
+  max-width: 400px;
 }
 
-.auth-header {
-  text-align: center;
+.auth-form-container {
+  width: 100%;
+}
+
+.form-header {
   margin-bottom: 32px;
 }
 
-.auth-header .logo {
-  margin-bottom: 16px;
-  display: inline-block;
-}
-
-.auth-header h1 {
+.form-header h1 {
   font-size: 28px;
   font-weight: 700;
-  color: var(--primary-color);
+  color: var(--gray-900);
   margin-bottom: 8px;
 }
 
-.auth-header p {
+.form-header p {
   color: var(--gray-500);
   font-size: 14px;
 }
@@ -238,42 +317,27 @@ export default {
   margin-bottom: 24px;
 }
 
-.input-wrapper {
-  position: relative;
-}
-
-.input-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--gray-500);
-}
-
-.form-control {
-  padding-left: 44px;
-}
-
-.toggle-password {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: var(--gray-500);
-  cursor: pointer;
-  padding: 4px;
-}
-
-.toggle-password:hover {
-  color: var(--gray-700);
-}
-
-.form-options {
-  display: flex;
-  justify-content: flex-end;
+.form-group {
   margin-bottom: 24px;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.label-row .form-label {
+  margin-bottom: 0;
 }
 
 .forgot-link {
@@ -281,8 +345,76 @@ export default {
   color: var(--primary-color);
 }
 
-.forgot-link:hover {
-  text-decoration: underline;
+.password-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 4px;
+  transition: var(--transition);
+}
+
+.toggle-password:hover {
+  color: var(--gray-700);
+}
+
+.password-wrapper .form-control {
+  padding-right: 44px;
+}
+
+.form-group-inline {
+  margin-bottom: 24px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-wrapper input {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--gray-300);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.checkbox-wrapper input:checked + .checkmark {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.checkbox-wrapper input:checked + .checkmark::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
+.checkbox-label {
+  font-size: 13px;
+  color: var(--gray-600);
 }
 
 .btn-lg {
@@ -308,30 +440,28 @@ export default {
   text-align: center;
   color: var(--gray-600);
   font-size: 14px;
+  margin-bottom: 32px;
 }
 
 .link {
   color: var(--primary-color);
   font-weight: 500;
-  cursor: pointer;
-}
-
-.link:hover {
-  text-decoration: underline;
 }
 
 .demo-credentials {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--gray-200);
+  padding: 20px;
+  background: var(--gray-50);
+  border-radius: var(--border-radius);
   text-align: center;
+  border: 1px solid var(--gray-200);
 }
 
 .demo-title {
-  font-size: 12px;
-  color: var(--gray-500);
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--gray-500);
   margin-bottom: 12px;
 }
 
@@ -343,10 +473,10 @@ export default {
 }
 
 .demo-btn {
-  padding: 6px 14px;
+  padding: 6px 16px;
   font-size: 12px;
   font-weight: 500;
-  background: var(--gray-100);
+  background: white;
   color: var(--gray-700);
   border: 1px solid var(--gray-200);
   border-radius: 20px;
@@ -356,7 +486,7 @@ export default {
 
 .demo-btn:hover {
   background: var(--primary-color);
-  color: var(--white);
+  color: white;
   border-color: var(--primary-color);
 }
 
@@ -365,13 +495,31 @@ export default {
   color: var(--gray-500);
 }
 
-.alert {
-  margin-bottom: 20px;
-}
-
-@media (max-width: 480px) {
-  .auth-card {
-    padding: 24px;
+/* Responsive */
+@media (max-width: 992px) {
+  .auth-wrapper {
+    flex-direction: column;
+  }
+  
+  .auth-side.left-side {
+    padding: 40px;
+    min-height: auto;
+  }
+  
+  .side-text h1 {
+    font-size: 28px;
+  }
+  
+  .features-list {
+    display: none;
+  }
+  
+  .brand-logo {
+    margin-bottom: 30px;
+  }
+  
+  .auth-side.right-side {
+    padding: 40px 24px;
   }
 }
 </style>
