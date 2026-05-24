@@ -1,0 +1,160 @@
+import api from '@/shared/services/api'
+import Cookies from 'js-cookie'
+
+const state = {
+  user: null,
+  loading: false,
+  error: null
+}
+
+const getters = {
+  currentUser: state => state.user,
+  isAuthenticated: state => !!state.user,
+  isAdmin: state => state.user?.role === 'admin',
+  isManager: state => state.user?.role === 'manager',
+  isStaff: state => state.user?.role === 'staff',
+  authLoading: state => state.loading,
+  authError: state => state.error,
+  currentSiteId: state => state.user?.site_id
+}
+
+const mutations = {
+  SET_USER(state, user) {
+    state.user = user
+  },
+  SET_LOADING(state, loading) {
+    state.loading = loading
+  },
+  SET_ERROR(state, error) {
+    state.error = error
+  },
+  CLEAR_ERROR(state) {
+    state.error = null
+  },
+  CLEAR_AUTH(state) {
+    state.user = null
+    state.error = null
+  }
+}
+
+const actions = {
+  async login({ commit, dispatch }, { email, password, remember = false }) {
+    commit('CLEAR_ERROR')
+    commit('SET_LOADING', true)
+    try {
+      const response = await api.post('/auth/login', { email, password, remember })
+      const { user } = response.data
+      const expires = remember ? 7 : 1
+      const isProduction = window.location.protocol === 'https:'
+      const cookieOptions = { expires, sameSite: 'Strict', secure: isProduction }
+      Cookies.set('auth_status', '1', cookieOptions)
+      Cookies.set('user_role', user.role, cookieOptions)
+      if (user.site_id) {
+        Cookies.set('site_id', user.site_id, cookieOptions)
+      }
+      commit('SET_USER', user)
+      await dispatch('sites/initializeSite', null, { root: true })
+      return user
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Login failed. Please check your credentials.'
+      commit('SET_ERROR', errorMessage)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async register({ commit }, userData) {
+    commit('CLEAR_ERROR')
+    commit('SET_LOADING', true)
+    try {
+      const response = await api.post('/auth/register', userData)
+      const { user } = response.data
+      const isProduction = window.location.protocol === 'https:'
+      const cookieOptions = { expires: 7, sameSite: 'Strict', secure: isProduction }
+      Cookies.set('auth_status', '1', cookieOptions)
+      Cookies.set('user_role', user.role, cookieOptions)
+      if (user.site_id) {
+        Cookies.set('site_id', user.site_id, cookieOptions)
+      }
+      commit('SET_USER', user)
+      return response.data
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Registration failed. Please try again.'
+      commit('SET_ERROR', errorMessage)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async fetchCurrentUser({ commit }) {
+    commit('SET_LOADING', true)
+    try {
+      const response = await api.get('/auth/me')
+      commit('SET_USER', response.data)
+      return response.data
+    } catch (error) {
+      Cookies.remove('auth_status')
+      Cookies.remove('user_role')
+      Cookies.remove('site_id')
+      commit('CLEAR_AUTH')
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async changePassword({ commit }, { oldPassword, newPassword }) {
+    commit('SET_LOADING', true)
+    try {
+      await api.post('/auth/change-password', { oldPassword, newPassword })
+    } catch (error) {
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async logout({ commit }) {
+    try {
+      await api.post('/auth/logout')
+    } catch {
+    }
+    Cookies.remove('auth_status')
+    Cookies.remove('user_role')
+    Cookies.remove('site_id')
+    commit('CLEAR_AUTH')
+  },
+
+  clearError({ commit }) {
+    commit('CLEAR_ERROR')
+  },
+
+  async initAuth({ commit }) {
+    const authStatus = Cookies.get('auth_status')
+    if (authStatus) {
+      try {
+        const response = await api.get('/auth/me')
+        commit('SET_USER', response.data)
+        const user = response.data
+        if (user.site_id) {
+          const isProduction = window.location.protocol === 'https:'
+          Cookies.set('site_id', user.site_id, { expires: 7, sameSite: 'Strict', secure: isProduction })
+        }
+      } catch {
+        Cookies.remove('auth_status')
+        Cookies.remove('user_role')
+        Cookies.remove('site_id')
+      }
+    }
+  }
+}
+
+export default {
+  namespaced: true,
+  state,
+  getters,
+  mutations,
+  actions
+}

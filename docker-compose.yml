@@ -1,0 +1,76 @@
+services:
+  # ============================================================
+  # Local PostgreSQL (for development)
+  # Start with:   docker compose --profile local-db up -d
+  # Skip with:    docker compose up -d              (uses Supabase)
+  # ============================================================
+  postgres:
+    image: postgres:14-alpine
+    container_name: ims_postgres
+    restart: unless-stopped
+    profiles:
+      - local-db
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d inventory_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ims_backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      # ----- Database -----
+      # Local DB: leave DATABASE_URL empty; DB_HOST points to the 'postgres' service
+      # Supabase: set DATABASE_URL to your Supabase connection URI
+      DATABASE_URL: ${DATABASE_URL:-}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-inventory_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_SSL: ${DB_SSL:-false}
+      # ----- App -----
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://localhost}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    ports:
+      - "3000:3000"
+    # depends_on:                    # uncomment when running with local postgres
+    #   postgres:                    #   docker compose --profile local-db up -d
+    #     condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "--eval", "require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode !== 200 ? 1 : 0))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: ims_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
