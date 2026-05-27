@@ -16,7 +16,7 @@ import * as entityImageController from '../controllers/entityImageController.js'
 import { initializeSystem } from '../controllers/setupController.js';
 import { authenticate, authorize, requireSite, ROLES } from '../middleware/auth.js';
 import AuditService from '../services/AuditService.js';
-import { validateProduct, validateSupplier, validateInventory, validateEntityInput, validateCategory, validateSite } from '../middleware/validation.js';
+import { validateProduct, validateSupplier, validateInventory, validateEntityInput, validateCategory, validateSite, validateSiteUser } from '../middleware/validation.js';
 
 const router = express.Router();
 
