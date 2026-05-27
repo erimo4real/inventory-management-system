@@ -19,12 +19,12 @@ export default class SiteRepository {
   }
 
   async create(data) {
-    const { name, slug, address, phone, email } = data;
+    const { name, slug, address, phone, email, logo_url } = data;
     const result = await pool.query(
-      `INSERT INTO sites (name, slug, address, phone, email)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO sites (name, slug, address, phone, email, logo_url)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [name, slug, address, phone, email]
+      [name, slug, address, phone, email, logo_url]
     );
     return result.rows[0];
   }
@@ -34,7 +34,7 @@ export default class SiteRepository {
     const values = [];
     let paramCount = 1;
 
-    const allowedFields = ['name', 'slug', 'address', 'phone', 'email', 'is_active'];
+    const allowedFields = ['name', 'slug', 'address', 'phone', 'email', 'is_active', 'logo_url', 'logo_public_id'];
 
     for (const [key, value] of Object.entries(data)) {
       if (allowedFields.includes(key) && value !== undefined) {

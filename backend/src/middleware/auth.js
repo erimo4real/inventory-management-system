@@ -78,6 +78,10 @@ export const authenticate = (req, res, next) => {
   }
 
   req.user = decoded;
+
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && req.headers['x-requested-with'] !== 'XMLHttpRequest') {
+    return res.status(403).json({ error: 'CSRF validation failed' });
+  }
   
   // Get site_id from header, query, or JWT payload
   const siteId = req.headers['x-site-id'] || req.query.site_id || decoded.site_id;

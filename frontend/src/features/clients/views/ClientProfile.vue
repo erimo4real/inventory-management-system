@@ -172,6 +172,10 @@ export default {
     const canManage = computed(() => ['admin', 'manager'].includes(currentUser.value?.role))
     
     const fetchClient = async () => {
+      const clientId = parseInt(route.params.id)
+      if (isNaN(clientId)) {
+        return
+      }
       loading.value = true
       try {
         client.value = await store.dispatch('clients/fetchClient', route.params.id)

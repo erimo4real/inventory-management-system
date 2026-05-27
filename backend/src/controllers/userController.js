@@ -1,4 +1,5 @@
 import UserRepository from '../repositories/UserRepository.js';
+import UploadService from '../services/UploadService.js';
 
 const userRepo = new UserRepository();
 
@@ -101,10 +102,43 @@ export const updateUser = async (req, res, next) => {
   }
 };
 
+// PUT /api/users/:id/avatar - Update user avatar (admin)
+export const updateUserAvatar = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const user = await userRepo.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    if (req.siteId && user.site_id !== req.siteId) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.avatar_public_id) {
+      try {
+        await UploadService.deleteImage(user.avatar_public_id);
+      } catch (err) {
+        console.error('[UserController] Failed to delete old avatar:', err.message);
+      }
+    }
+
+    const result = await UploadService.uploadImage(req.file, { folder: 'avatars' });
+    const updated = await userRepo.update(userId, { avatar_url: result.url, avatar_public_id: result.public_id });
+    res.json({ avatar_url: updated.avatar_url });
+  } catch (err) {
+    console.error('[UserController updateUserAvatar] ERROR:', err.message);
+    next(err);
+  }
+};
+
 // DELETE /api/users/:id - Delete user
 export const deleteUser = async (req, res, next) => {
   try {
-    if (parseInt(req.params.id) === req.user.id) {
+    const targetId = parseInt(req.params.id, 10);
+    if (isNaN(targetId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    if (targetId === req.user.id) {
       return res.status(400).json({ error: 'Cannot delete your own account' });
     }
     

@@ -12,6 +12,7 @@ import * as reportController from '../controllers/reportController.js';
 import categoryController from '../controllers/categoryController.js';
 import { upload, uploadImage, uploadImages, deleteImage } from '../controllers/uploadController.js';
 import * as profileController from '../controllers/profileController.js';
+import * as entityImageController from '../controllers/entityImageController.js';
 import { initializeSystem } from '../controllers/setupController.js';
 import { authenticate, authorize, requireSite, ROLES } from '../middleware/auth.js';
 import AuditService from '../services/AuditService.js';
@@ -47,13 +48,19 @@ router.post('/sites', authorize(ROLES.ADMIN), validateSite, siteController.creat
 router.put('/sites/:id', authorize(ROLES.ADMIN), validateSite, siteController.updateSite);
 router.delete('/sites/:id', authorize(ROLES.ADMIN), siteController.deleteSite);
 router.get('/sites/:id/users', authorize(ROLES.ADMIN, ROLES.MANAGER), siteController.getSiteUsers);
-router.post('/sites/add-user', authorize(ROLES.ADMIN), siteController.addUserToSite);
-router.post('/sites/remove-user', authorize(ROLES.ADMIN), siteController.removeUserFromSite);
+router.post('/sites/add-user', authorize(ROLES.ADMIN), validateSiteUser, siteController.addUserToSite);
+router.post('/sites/remove-user', authorize(ROLES.ADMIN), validateSiteUser, siteController.removeUserFromSite);
 
 // ========== Upload Routes (Require Site) ==========
 router.post('/upload/image', requireSite, upload.single('image'), uploadImage);
 router.post('/upload/images', requireSite, upload.array('images', 10), uploadImages);
 router.delete('/upload/image', requireSite, deleteImage);
+
+// ========== Entity Image Routes (Require Site, Manager+) ==========
+router.put('/:entityType(product|supplier|client|vendor)/:entityId/image', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), upload.single('image'), entityImageController.uploadEntityImage);
+router.delete('/:entityType(product|supplier|client|vendor)/:entityId/image', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), entityImageController.deleteEntityImage);
+router.put('/sites/:entityId/logo', requireSite, authorize(ROLES.ADMIN), upload.single('image'), (req, res, next) => { req.params.entityType = 'site'; entityImageController.uploadEntityImage(req, res, next); });
+router.delete('/sites/:entityId/logo', requireSite, authorize(ROLES.ADMIN), (req, res, next) => { req.params.entityType = 'site'; entityImageController.deleteEntityImage(req, res, next); });
 
 // ========== Products (Role-based, Require Site) ==========
 router.get('/products', requireSite, productController.getProducts);
@@ -67,7 +74,7 @@ router.delete('/products/:id', requireSite, authorize(ROLES.ADMIN), productContr
 // ========== Inventory (Role-based, Require Site) ==========
 router.post('/inventory/in', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateInventory, inventoryController.stockIn);
 router.post('/inventory/out', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF), validateInventory, inventoryController.stockOut);
-router.post('/inventory/adjust/:product_id', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), inventoryController.adjustStock);
+router.post('/inventory/adjust/:product_id', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), validateInventory, inventoryController.adjustStock);
 router.get('/inventory/history/:product_id', requireSite, inventoryController.getProductHistory);
 router.get('/inventory/history', requireSite, inventoryController.getRecentTransactions);
 router.get('/inventory/stats', requireSite, inventoryController.getDashboardStats);
@@ -88,6 +95,7 @@ router.get('/users/:id', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), use
 router.post('/users', requireSite, authorize(ROLES.ADMIN), userController.createUser);
 router.put('/users/:id', requireSite, authorize(ROLES.ADMIN), userController.updateUser);
 router.delete('/users/:id', requireSite, authorize(ROLES.ADMIN), userController.deleteUser);
+router.put('/users/:id/avatar', requireSite, authorize(ROLES.ADMIN), upload.single('avatar'), userController.updateUserAvatar);
 
 // ========== Clients (Role-based, Require Site) ==========
 router.get('/clients', requireSite, clientController.getClients);

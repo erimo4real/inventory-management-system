@@ -56,8 +56,9 @@
                 <tr v-for="site in filteredSites" :key="site.id">
                   <td>
                     <div class="d-flex align-center gap-3">
-                      <div class="avatar">
-                        {{ site.name.charAt(0).toUpperCase() }}
+                      <img v-if="site.logo_url" :src="site.logo_url" alt="" class="entity-thumb" style="border-radius:50%" />
+                      <div v-else class="entity-thumb entity-thumb-placeholder" style="border-radius:50%">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
                       </div>
                       <div>
                         <div class="fw-600">{{ site.name }}</div>
@@ -156,6 +157,17 @@
                 <input v-model="form.slug" type="text" class="form-control" required placeholder="e.g., main-warehouse" />
                 <small class="text-muted">Unique identifier for the site</small>
               </div>
+              <div class="form-group">
+                <label class="form-label">Logo</label>
+                <div class="entity-image-upload" @click="$refs.siteLogoInput.click()">
+                  <img v-if="form.logo_url" :src="form.logo_url" alt="" class="entity-image-preview" />
+                  <div v-else class="entity-image-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                    <span>Click to upload</span>
+                  </div>
+                  <input ref="siteLogoInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+                </div>
+              </div>
               <div class="row">
                 <div class="col-6">
                   <div class="form-group">
@@ -237,6 +249,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showConfirm } from '@/shared/components/ConfirmDialog.vue'
+import api from '@/shared/services/api'
 import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
 
 export default {
@@ -252,12 +266,15 @@ export default {
     const editingSiteId = ref(null)
     const selectedSite = ref(null)
     
+    const imageFile = ref(null)
+
     const form = ref({
       name: '',
       slug: '',
       email: '',
       phone: '',
-      address: ''
+      address: '',
+      logo_url: ''
     })
     
     const sites = computed(() => store.getters['sites/allSites'])
@@ -294,12 +311,14 @@ export default {
     
     const editSite = (site) => {
       editingSiteId.value = site.id
+      imageFile.value = null
       form.value = {
         name: site.name,
         slug: site.slug,
         email: site.email || '',
         phone: site.phone || '',
-        address: site.address || ''
+        address: site.address || '',
+        logo_url: site.logo_url || ''
       }
       showEditModal.value = true
     }
@@ -310,7 +329,8 @@ export default {
     }
     
     const deleteSite = async (siteId) => {
-      if (!confirm('Are you sure you want to delete this site? All data associated with this site will be lost.')) return
+      const ok = await showConfirm('Are you sure you want to delete this site? All data associated with this site will be lost.')
+      if (!ok) return
       try {
         await store.dispatch('sites/deleteSite', siteId)
         showSuccess('Site deleted successfully')
@@ -320,16 +340,52 @@ export default {
       }
     }
     
+    const handleImageSelect = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      if (file.size > 5 * 1024 * 1024) {
+        showError('Image must be under 5MB')
+        return
+      }
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        showError('Image must be JPEG, PNG, GIF, or WebP')
+        return
+      }
+      imageFile.value = file
+      const reader = new FileReader()
+      reader.onload = (ev) => { form.value.logo_url = ev.target.result }
+      reader.readAsDataURL(file)
+    }
+
     const handleSubmit = async () => {
       try {
         if (showEditModal.value) {
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const res = await api.put(`/sites/${editingSiteId.value}/logo`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            form.value.logo_url = res.data.url
+          }
           await store.dispatch('sites/updateSite', {
             id: editingSiteId.value,
             data: form.value
           })
           showSuccess('Site updated successfully')
         } else {
-          await store.dispatch('sites/createSite', form.value)
+          const newSite = await store.dispatch('sites/createSite', form.value)
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const res = await api.put(`/sites/${newSite.id}/logo`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            await store.dispatch('sites/updateSite', {
+              id: newSite.id,
+              data: { logo_url: res.data.url }
+            })
+          }
           showSuccess('Site created successfully')
         }
         closeModal()
@@ -343,12 +399,14 @@ export default {
       showAddModal.value = false
       showEditModal.value = false
       editingSiteId.value = null
+      imageFile.value = null
       form.value = {
         name: '',
         slug: '',
         email: '',
         phone: '',
-        address: ''
+        address: '',
+        logo_url: ''
       }
     }
     
@@ -371,6 +429,7 @@ export default {
       editSite,
       viewSiteDetails,
       deleteSite,
+      handleImageSelect,
       handleSubmit,
       closeModal
     }

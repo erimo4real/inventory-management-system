@@ -4,8 +4,8 @@ import AuditService from './AuditService.js';
 const vendorRepo = new VendorRepository();
 
 export default class VendorService {
-  static async getAll(search = null, category = null, siteId) {
-    return await vendorRepo.findAll(siteId, search, category);
+  static async getAll(search = null, category = null, siteId, { skip = 0, limit = 100 } = {}) {
+    return await vendorRepo.findAll(siteId, search, category, { skip, limit });
   }
 
   static async getById(id, siteId) {

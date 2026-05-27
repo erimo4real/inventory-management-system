@@ -2,9 +2,9 @@ import SupplierService from '../services/SupplierService.js';
 
 export const getSuppliers = async (req, res, next) => {
   try {
-    const { search } = req.query;
-    const suppliers = await SupplierService.getAll(search, req.siteId);
-    res.json(suppliers);
+    const { search, skip = 0, limit = 100 } = req.query;
+    const result = await SupplierService.getAll(search, req.siteId, { skip: parseInt(skip), limit: parseInt(limit) });
+    res.json({ data: result.rows, total: result.total });
   } catch (err) {
     console.error('[Controller getSuppliers] ERROR:', err.message);
     next(err);

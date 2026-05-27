@@ -24,7 +24,13 @@
       <div v-else class="suppliers-grid">
         <div v-for="supplier in suppliers" :key="supplier.id" class="supplier-card">
           <div class="supplier-header">
-            <h3>{{ supplier.name }}</h3>
+            <div class="d-flex align-center gap-3">
+              <img v-if="supplier.image_url" :src="supplier.image_url" alt="" class="entity-thumb" />
+              <div v-else class="entity-thumb entity-thumb-placeholder" style="border-radius:50%">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+              </div>
+              <h3>{{ supplier.name }}</h3>
+            </div>
             <span class="status" :class="supplier.is_active ? 'active' : 'inactive'">
               {{ supplier.is_active ? 'Active' : 'Inactive' }}
             </span>
@@ -54,6 +60,19 @@
         </div>
       </div>
       
+      <div v-if="totalPages > 1" class="pagination">
+        <button class="btn btn-sm btn-outline" :disabled="page === 1" @click="goToPage(page - 1)">Previous</button>
+        <template v-for="p in totalPages" :key="p">
+          <span v-if="totalPages <= 7 || Math.abs(p - page) <= 1 || p === 1 || p === totalPages">
+            <span v-if="p === page" class="pagination-item active">{{ p }}</span>
+            <button v-else class="btn btn-sm btn-outline pagination-item" @click="goToPage(p)">{{ p }}</button>
+          </span>
+          <span v-else-if="p === 2 && page > 3" class="pagination-ellipsis">...</span>
+          <span v-else-if="p === totalPages - 1 && page < totalPages - 2" class="pagination-ellipsis">...</span>
+        </template>
+        <button class="btn btn-sm btn-outline" :disabled="page === totalPages" @click="goToPage(page + 1)">Next</button>
+      </div>
+      
       <div v-if="!loading && !suppliers.length" class="empty-state">
         No suppliers found
       </div>
@@ -65,6 +84,17 @@
             <div class="form-group">
               <label>Name *</label>
               <input v-model="form.name" type="text" required />
+            </div>
+            <div class="form-group">
+              <label>Image</label>
+              <div class="entity-image-upload" @click="$refs.supplierImgInput.click()">
+                <img v-if="form.image_url" :src="form.image_url" alt="" class="entity-image-preview" />
+                <div v-else class="entity-image-placeholder">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+                  <span>Click to upload</span>
+                </div>
+                <input ref="supplierImgInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+              </div>
             </div>
             <div class="form-group">
               <label>Contact Person</label>
@@ -99,6 +129,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showConfirm } from '@/shared/components/ConfirmDialog.vue'
+import api from '@/shared/services/api'
+import { sanitizeSearch } from '@/shared/utils/sanitize'
+import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
 
 export default {
   name: 'Suppliers',
@@ -111,67 +145,123 @@ export default {
     const showEditModal = ref(false)
     const editingSupplierId = ref(null)
     
+    const imageFile = ref(null)
+    const page = ref(1)
+    const pageSize = ref(25)
+
     const form = ref({
       name: '',
       contact_person: '',
       email: '',
       phone: '',
-      address: ''
+      address: '',
+      image_url: ''
     })
     
     const suppliers = computed(() => store.getters['suppliers/allSuppliers'])
     const loading = computed(() => store.getters['suppliers/suppliersLoading'])
+    const total = computed(() => store.getters['supplierTotal'])
+    const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
     
     let searchTimeout = null
     
+    const goToPage = (p) => {
+      page.value = p
+      fetchSuppliers()
+    }
+    
     const handleSearch = () => {
       clearTimeout(searchTimeout)
+      page.value = 1
       searchTimeout = setTimeout(() => {
         fetchSuppliers()
       }, 300)
     }
     
     const fetchSuppliers = () => {
+      const q = sanitizeSearch(searchQuery.value)
       store.dispatch('suppliers/fetchSuppliers', {
-        query: searchQuery.value || undefined
+        query: q || undefined,
+        skip: (page.value - 1) * pageSize.value,
+        limit: pageSize.value
       })
     }
     
     const editSupplier = (supplier) => {
       editingSupplierId.value = supplier.id
+      imageFile.value = null
       form.value = {
         name: supplier.name,
         contact_person: supplier.contact_person || '',
         email: supplier.email || '',
         phone: supplier.phone || '',
-        address: supplier.address || ''
+        address: supplier.address || '',
+        image_url: supplier.image_url || ''
       }
       showEditModal.value = true
     }
     
     const deleteSupplier = async (supplierId) => {
-      if (!confirm('Are you sure you want to delete this supplier?')) return
+      const ok = await showConfirm('Are you sure you want to delete this supplier?')
+      if (!ok) return
       try {
         await store.dispatch('suppliers/deleteSupplier', supplierId)
+        showSuccess('Supplier deleted successfully')
       } catch (error) {
-        alert('Failed to delete supplier')
+        showError('Failed to delete supplier')
       }
     }
     
+    const handleImageSelect = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      if (file.size > 5 * 1024 * 1024) {
+        showError('Image must be under 5MB')
+        return
+      }
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        showError('Image must be JPEG, PNG, GIF, or WebP')
+        return
+      }
+      imageFile.value = file
+      const reader = new FileReader()
+      reader.onload = (ev) => { form.value.image_url = ev.target.result }
+      reader.readAsDataURL(file)
+    }
+
     const handleSubmit = async () => {
       try {
         if (showEditModal.value) {
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const res = await api.put(`/suppliers/${editingSupplierId.value}/image`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            form.value.image_url = res.data.url
+          }
           await store.dispatch('suppliers/updateSupplier', {
             id: editingSupplierId.value,
             data: form.value
           })
         } else {
-          await store.dispatch('suppliers/createSupplier', form.value)
+          const newSupplier = await store.dispatch('suppliers/createSupplier', form.value)
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const res = await api.put(`/suppliers/${newSupplier.id}/image`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            await store.dispatch('suppliers/updateSupplier', {
+              id: newSupplier.id,
+              data: { image_url: res.data.url }
+            })
+          }
         }
         closeModal()
         fetchSuppliers()
       } catch (error) {
-        alert(error.response?.data?.detail || 'Operation failed')
+        showError(error.response?.data?.error || error.response?.data?.detail || 'Operation failed')
       }
     }
     
@@ -179,12 +269,14 @@ export default {
       showAddModal.value = false
       showEditModal.value = false
       editingSupplierId.value = null
+      imageFile.value = null
       form.value = {
         name: '',
         contact_person: '',
         email: '',
         phone: '',
-        address: ''
+        address: '',
+        image_url: ''
       }
     }
     
@@ -199,11 +291,15 @@ export default {
       form,
       suppliers,
       loading,
+      page,
+      totalPages,
       handleSearch,
       editSupplier,
       deleteSupplier,
+      handleImageSelect,
       handleSubmit,
-      closeModal
+      closeModal,
+      goToPage
     }
   }
 }
@@ -416,5 +512,38 @@ export default {
 
 .btn-secondary:hover {
   background: #e5e7eb;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.pagination-item {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.pagination-item.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.pagination-ellipsis {
+  color: var(--gray-500);
+  font-size: 13px;
+  padding: 0 4px;
 }
 </style>

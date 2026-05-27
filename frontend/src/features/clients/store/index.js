@@ -4,18 +4,21 @@ const state = {
   clients: [],
   currentClient: null,
   stats: null,
+  total: 0,
   loading: false,
   error: null
 }
 
 const getters = {
   allClients: state => state.clients,
-  clientsLoading: state => state.loading
+  clientsLoading: state => state.loading,
+  clientTotal: state => state.total
 }
 
 const mutations = {
-  SET_CLIENTS(state, clients) {
-    state.clients = clients
+  SET_CLIENTS(state, { data, total }) {
+    state.clients = data
+    state.total = total
   },
   SET_CURRENT_CLIENT(state, client) {
     state.currentClient = client
@@ -48,8 +51,9 @@ const actions = {
     commit('SET_LOADING', true)
     try {
       const response = await api.get('/clients', { params })
-      commit('SET_CLIENTS', response.data)
-      return response.data
+      const { data, total } = response.data
+      commit('SET_CLIENTS', { data, total })
+      return { data, total }
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.error || 'Failed to fetch clients')
       throw error

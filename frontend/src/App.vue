@@ -4,17 +4,19 @@
     <router-view />
   </template>
   <ToastContainer />
+  <ConfirmDialog />
 </template>
 
 <script>
 import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import ToastContainer from '@/shared/components/ToastContainer.vue'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
 import Loading from '@/features/loading/views/Loading.vue'
 
 export default {
   name: 'App',
-  components: { ToastContainer, Loading },
+  components: { ToastContainer, ConfirmDialog, Loading },
   setup() {
     const store = useStore()
     const isLoading = ref(true)

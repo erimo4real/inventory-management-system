@@ -100,6 +100,12 @@
                     <div class="form-group">
                       <label class="form-label">New Password</label>
                       <input v-model="passwordForm.newPassword" type="password" class="form-control" required minlength="6" />
+                      <div v-if="passwordForm.newPassword" class="password-strength">
+                        <div class="strength-bar">
+                          <div class="strength-fill" :class="pwStrength.level" :style="{ width: pwStrength.pct + '%' }"></div>
+                        </div>
+                        <span class="strength-label" :class="pwStrength.level">{{ pwStrength.label }}</span>
+                      </div>
                     </div>
                   </div>
                   <div class="col-6">
@@ -262,6 +268,10 @@ export default {
         showError('Image must be less than 5MB')
         return
       }
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        showError('Image must be JPEG, PNG, GIF, or WebP')
+        return
+      }
 
       previewUrl.value = URL.createObjectURL(file)
 
@@ -288,6 +298,21 @@ export default {
       oldPassword: '',
       newPassword: '',
       confirmPassword: ''
+    })
+    
+    const pwStrength = computed(() => {
+      const pw = passwordForm.value.newPassword || ''
+      let score = 0
+      if (pw.length >= 8) score++
+      if (pw.length >= 12) score++
+      if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++
+      if (/\d/.test(pw)) score++
+      if (/[^a-zA-Z0-9]/.test(pw)) score++
+      if (score <= 1) return { level: 'weak', label: 'Weak', pct: 20 }
+      if (score <= 2) return { level: 'fair', label: 'Fair', pct: 40 }
+      if (score <= 3) return { level: 'medium', label: 'Medium', pct: 60 }
+      if (score <= 4) return { level: 'strong', label: 'Strong', pct: 80 }
+      return { level: 'very-strong', label: 'Very Strong', pct: 100 }
     })
     
     const permissions = computed(() => {
@@ -396,6 +421,7 @@ export default {
       previewUrl,
       handleAvatarChange,
       passwordForm,
+      pwStrength,
       permissions,
       getRoleBadgeClass,
       getPermBadgeClass,
@@ -643,6 +669,47 @@ export default {
 .password-form {
   max-width: 500px;
 }
+
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.strength-fill.weak { background: var(--danger-color); }
+.strength-fill.fair { background: var(--warning-color); }
+.strength-fill.medium { background: #ffc107; }
+.strength-fill.strong { background: #8bc34a; }
+.strength-fill.very-strong { background: var(--success-color); }
+
+.strength-label {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 70px;
+  text-align: right;
+}
+
+.strength-label.weak { color: var(--danger-color); }
+.strength-label.fair { color: var(--warning-color); }
+.strength-label.medium { color: #ffc107; }
+.strength-label.strong { color: #8bc34a; }
+.strength-label.very-strong { color: var(--success-color); }
 
 @media (max-width: 992px) {
   .col-8, .col-4 {

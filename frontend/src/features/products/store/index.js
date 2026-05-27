@@ -5,6 +5,7 @@ const state = {
   categories: [],
   lowStockProducts: [],
   currentProduct: null,
+  total: 0,
   loading: false,
   error: null
 }
@@ -14,12 +15,14 @@ const getters = {
   allCategories: state => state.categories,
   lowStockItems: state => state.lowStockProducts,
   currentProduct: state => state.currentProduct,
+  productTotal: state => state.total,
   productsLoading: state => state.loading
 }
 
 const mutations = {
-  SET_PRODUCTS(state, products) {
-    state.products = products
+  SET_PRODUCTS(state, { data, total }) {
+    state.products = data
+    state.total = total
   },
   SET_CATEGORIES(state, categories) {
     state.categories = categories
@@ -55,8 +58,9 @@ const actions = {
     commit('SET_LOADING', true)
     try {
       const response = await api.get('/products', { params })
-      commit('SET_PRODUCTS', response.data)
-      return response.data
+      const { data, total } = response.data
+      commit('SET_PRODUCTS', { data, total })
+      return { data, total }
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.error || 'Failed to fetch products')
       throw error

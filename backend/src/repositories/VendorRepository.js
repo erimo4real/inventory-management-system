@@ -1,26 +1,41 @@
 import pool from '../config/db.js';
 
 export default class VendorRepository {
-  async findAll(siteId, search = null, category = null) {
+  async findAll(siteId, search = null, category = null, { skip = 0, limit = 100 } = {}) {
     let query = 'SELECT * FROM vendors WHERE is_active = true AND site_id = $1';
+    let countQuery = 'SELECT COUNT(*) as total FROM vendors WHERE is_active = true AND site_id = $1';
     const params = [siteId];
+    const countParams = [siteId];
     let paramIndex = 2;
 
     if (search) {
-      query += ` AND (name ILIKE $${paramIndex} OR company_name ILIKE $${paramIndex} OR email ILIKE $${paramIndex} OR phone ILIKE $${paramIndex})`;
+      const searchClause = ` AND (name ILIKE $${paramIndex} OR company_name ILIKE $${paramIndex} OR email ILIKE $${paramIndex} OR phone ILIKE $${paramIndex})`;
+      query += searchClause;
+      countQuery += searchClause;
       params.push(`%${search}%`);
+      countParams.push(`%${search}%`);
       paramIndex++;
     }
 
     if (category) {
-      query += ` AND category = $${paramIndex}`;
+      const catClause = ` AND category = $${paramIndex}`;
+      query += catClause;
+      countQuery += catClause;
       params.push(category);
+      countParams.push(category);
       paramIndex++;
     }
 
     query += ' ORDER BY created_at DESC';
-    const result = await pool.query(query, params);
-    return result.rows;
+    query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, skip);
+
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(query, params),
+      pool.query(countQuery, countParams)
+    ]);
+
+    return { rows: dataResult.rows, total: parseInt(countResult.rows[0].total) };
   }
 
   async findById(id, siteId) {
@@ -48,12 +63,12 @@ export default class VendorRepository {
   }
 
   async create(data, siteId) {
-    const { name, company_name, contact_person, email, phone, address, city, country, category, tax_id, notes } = data;
+    const { name, company_name, contact_person, email, phone, address, city, country, category, tax_id, notes, image_url } = data;
     const result = await pool.query(
-      `INSERT INTO vendors (site_id, name, company_name, contact_person, email, phone, address, city, country, category, tax_id, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      `INSERT INTO vendors (site_id, name, company_name, contact_person, email, phone, address, city, country, category, tax_id, notes, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
-      [siteId, name, company_name, contact_person, email, phone, address, city, country, category, tax_id, notes]
+      [siteId, name, company_name, contact_person, email, phone, address, city, country, category, tax_id, notes, image_url]
     );
     return result.rows[0];
   }
@@ -63,7 +78,7 @@ export default class VendorRepository {
     const values = [];
     let paramCount = 1;
 
-    const allowedFields = ['name', 'company_name', 'contact_person', 'email', 'phone', 'address', 'city', 'country', 'category', 'tax_id', 'notes', 'is_active'];
+    const allowedFields = ['name', 'company_name', 'contact_person', 'email', 'phone', 'address', 'city', 'country', 'category', 'tax_id', 'notes', 'is_active', 'image_url', 'image_public_id'];
 
     for (const [key, value] of Object.entries(data)) {
       if (allowedFields.includes(key) && value !== undefined) {

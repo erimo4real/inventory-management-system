@@ -1,18 +1,30 @@
 import pool from '../config/db.js';
 
 export default class SupplierRepository {
-  async findAll(siteId, search = null) {
+  async findAll(siteId, search = null, { skip = 0, limit = 100 } = {}) {
     let query = 'SELECT * FROM suppliers WHERE is_active = true AND site_id = $1';
+    let countQuery = 'SELECT COUNT(*) as total FROM suppliers WHERE is_active = true AND site_id = $1';
     const params = [siteId];
+    const countParams = [siteId];
 
     if (search) {
-      query += ` AND (name ILIKE $2 OR email ILIKE $2 OR phone ILIKE $2)`;
+      const searchClause = ` AND (name ILIKE $2 OR email ILIKE $2 OR phone ILIKE $2)`;
+      query += searchClause;
+      countQuery += searchClause;
       params.push(`%${search}%`);
+      countParams.push(`%${search}%`);
     }
 
     query += ' ORDER BY name';
-    const result = await pool.query(query, params);
-    return result.rows;
+    query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(limit, skip);
+
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(query, params),
+      pool.query(countQuery, countParams)
+    ]);
+
+    return { rows: dataResult.rows, total: parseInt(countResult.rows[0].total) };
   }
 
   async findById(id, siteId) {
@@ -21,12 +33,12 @@ export default class SupplierRepository {
   }
 
   async create(data, siteId) {
-    const { name, contact_person, email, phone, address } = data;
+    const { name, contact_person, email, phone, address, image_url } = data;
     const result = await pool.query(
-      `INSERT INTO suppliers (site_id, name, contact_person, email, phone, address)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO suppliers (site_id, name, contact_person, email, phone, address, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [siteId, name, contact_person, email, phone, address]
+      [siteId, name, contact_person, email, phone, address, image_url]
     );
     return result.rows[0];
   }
@@ -36,7 +48,7 @@ export default class SupplierRepository {
     const values = [];
     let paramCount = 1;
 
-    const allowedFields = ['name', 'contact_person', 'email', 'phone', 'address', 'is_active'];
+    const allowedFields = ['name', 'contact_person', 'email', 'phone', 'address', 'is_active', 'image_url', 'image_public_id'];
 
     for (const [key, value] of Object.entries(data)) {
       if (allowedFields.includes(key) && value !== undefined) {

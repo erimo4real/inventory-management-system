@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS sites (
   address TEXT,
   phone VARCHAR(50),
   email VARCHAR(255),
+  logo_url VARCHAR(500),
+  logo_public_id VARCHAR(255),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -64,6 +66,8 @@ CREATE TABLE IF NOT EXISTS suppliers (
   email VARCHAR(255),
   phone VARCHAR(50),
   address TEXT,
+  image_url VARCHAR(500),
+  image_public_id VARCHAR(255),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -83,6 +87,7 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT,
   barcode VARCHAR(100),
   image_url VARCHAR(500),
+  image_public_id VARCHAR(255),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -117,6 +122,8 @@ CREATE TABLE IF NOT EXISTS clients (
   city VARCHAR(100),
   country VARCHAR(100),
   notes TEXT,
+  image_url VARCHAR(500),
+  image_public_id VARCHAR(255),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -137,6 +144,8 @@ CREATE TABLE IF NOT EXISTS vendors (
   category VARCHAR(100),
   tax_id VARCHAR(100),
   notes TEXT,
+  image_url VARCHAR(500),
+  image_public_id VARCHAR(255),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

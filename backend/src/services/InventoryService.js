@@ -12,23 +12,15 @@ export default class InventoryService {
     try {
       await client.query('BEGIN');
       
-      const productResult = await client.query(
-        'SELECT quantity, name, sku FROM products WHERE id = $1 AND site_id = $2 AND is_active = true FOR UPDATE',
-        [data.product_id, siteId]
-      );
-      
-      if (productResult.rows.length === 0) {
+      const product = await productRepo.findByIdForUpdate(client, data.product_id, siteId);
+      if (!product) {
         throw { message: 'Product not found', status: 404 };
       }
       
-      const product = productResult.rows[0];
       const previousQuantity = product.quantity;
       const newQuantity = previousQuantity + parseInt(data.quantity);
       
-      await client.query(
-        'UPDATE products SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND site_id = $3',
-        [newQuantity, data.product_id, siteId]
-      );
+      await productRepo.updateQuantity(client, data.product_id, newQuantity, siteId);
       
       const transaction = await inventoryRepo.createTransaction({
         product_id: data.product_id,
@@ -66,23 +58,15 @@ export default class InventoryService {
     try {
       await client.query('BEGIN');
       
-      const productResult = await client.query(
-        'SELECT quantity, name, sku FROM products WHERE id = $1 AND site_id = $2 AND is_active = true FOR UPDATE',
-        [data.product_id, siteId]
-      );
-      
-      if (productResult.rows.length === 0) {
+      const product = await productRepo.findByIdForUpdate(client, data.product_id, siteId);
+      if (!product) {
         throw { message: 'Product not found', status: 404 };
       }
       
-      const product = productResult.rows[0];
       const previousQuantity = product.quantity;
       const newQuantity = Math.max(0, previousQuantity - parseInt(data.quantity));
       
-      await client.query(
-        'UPDATE products SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND site_id = $3',
-        [newQuantity, data.product_id, siteId]
-      );
+      await productRepo.updateQuantity(client, data.product_id, newQuantity, siteId);
       
       const transaction = await inventoryRepo.createTransaction({
         product_id: data.product_id,
@@ -119,23 +103,15 @@ export default class InventoryService {
     try {
       await client.query('BEGIN');
       
-      const productResult = await client.query(
-        'SELECT quantity, name, sku FROM products WHERE id = $1 AND site_id = $2 AND is_active = true FOR UPDATE',
-        [productId, siteId]
-      );
-      
-      if (productResult.rows.length === 0) {
+      const product = await productRepo.findByIdForUpdate(client, productId, siteId);
+      if (!product) {
         throw { message: 'Product not found', status: 404 };
       }
       
-      const product = productResult.rows[0];
       const previousQuantity = product.quantity;
       const { new_quantity, note } = data;
       
-      await client.query(
-        'UPDATE products SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND site_id = $3',
-        [new_quantity, productId, siteId]
-      );
+      await productRepo.updateQuantity(client, productId, new_quantity, siteId);
       
       const transaction = await inventoryRepo.createTransaction({
         product_id: productId,

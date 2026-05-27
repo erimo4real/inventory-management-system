@@ -146,6 +146,33 @@ export const validateEntityInput = (req, res, next) => {
   next();
 };
 
+export const validateSiteUser = (req, res, next) => {
+  const { user_id, site_id, role } = req.body;
+  const errors = [];
+
+  if (!user_id) {
+    errors.push('User ID is required');
+  } else if (isNaN(parseInt(user_id))) {
+    errors.push('User ID must be a number');
+  }
+
+  if (!site_id) {
+    errors.push('Site ID is required');
+  } else if (isNaN(parseInt(site_id))) {
+    errors.push('Site ID must be a number');
+  }
+
+  if (role && !['admin', 'manager', 'staff'].includes(role)) {
+    errors.push('Role must be one of: admin, manager, staff');
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  next();
+};
+
 export const validateCategory = (req, res, next) => {
   const { name, type, description } = req.body;
   const errors = [];

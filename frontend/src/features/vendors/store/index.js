@@ -5,18 +5,21 @@ const state = {
   currentVendor: null,
   stats: null,
   categories: [],
+  total: 0,
   loading: false,
   error: null
 }
 
 const getters = {
   allVendors: state => state.vendors,
-  vendorsLoading: state => state.loading
+  vendorsLoading: state => state.loading,
+  vendorTotal: state => state.total
 }
 
 const mutations = {
-  SET_VENDORS(state, vendors) {
-    state.vendors = vendors
+  SET_VENDORS(state, { data, total }) {
+    state.vendors = data
+    state.total = total
   },
   SET_CURRENT_VENDOR(state, vendor) {
     state.currentVendor = vendor
@@ -52,8 +55,9 @@ const actions = {
     commit('SET_LOADING', true)
     try {
       const response = await api.get('/vendors', { params })
-      commit('SET_VENDORS', response.data)
-      return response.data
+      const { data, total } = response.data
+      commit('SET_VENDORS', { data, total })
+      return { data, total }
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.error || 'Failed to fetch vendors')
       throw error

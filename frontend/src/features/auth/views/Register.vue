@@ -251,6 +251,12 @@
                   </svg>
                 </button>
               </div>
+              <div v-if="form.password" class="password-strength">
+                <div class="strength-bar">
+                  <div class="strength-fill" :class="passwordStrength.level" :style="{ width: passwordStrength.pct + '%' }"></div>
+                </div>
+                <span class="strength-label" :class="passwordStrength.level">{{ passwordStrength.label }}</span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -303,7 +309,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
@@ -325,6 +331,21 @@ export default {
       password: '',
       confirmPassword: '',
       terms: false
+    })
+    
+    const passwordStrength = computed(() => {
+      const pw = form.value.password || ''
+      let score = 0
+      if (pw.length >= 8) score++
+      if (pw.length >= 12) score++
+      if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++
+      if (/\d/.test(pw)) score++
+      if (/[^a-zA-Z0-9]/.test(pw)) score++
+      if (score <= 1) return { level: 'weak', label: 'Weak', pct: 20 }
+      if (score <= 2) return { level: 'fair', label: 'Fair', pct: 40 }
+      if (score <= 3) return { level: 'medium', label: 'Medium', pct: 60 }
+      if (score <= 4) return { level: 'strong', label: 'Strong', pct: 80 }
+      return { level: 'very-strong', label: 'Very Strong', pct: 100 }
     })
     
     const handleSubmit = async () => {
@@ -368,6 +389,7 @@ export default {
       error,
       success,
       loading,
+      passwordStrength,
       handleSubmit
     }
   }
@@ -689,4 +711,45 @@ export default {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.strength-fill.weak { background: var(--danger-color); width: 20% !important; }
+.strength-fill.fair { background: var(--warning-color); width: 40% !important; }
+.strength-fill.medium { background: #ffc107; width: 60% !important; }
+.strength-fill.strong { background: #8bc34a; width: 80% !important; }
+.strength-fill.very-strong { background: var(--success-color); width: 100% !important; }
+
+.strength-label {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 70px;
+  text-align: right;
+}
+
+.strength-label.weak { color: var(--danger-color); }
+.strength-label.fair { color: var(--warning-color); }
+.strength-label.medium { color: #ffc107; }
+.strength-label.strong { color: #8bc34a; }
+.strength-label.very-strong { color: var(--success-color); }
 </style>

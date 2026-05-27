@@ -2,9 +2,9 @@ import ClientService from '../services/ClientService.js';
 
 export const getClients = async (req, res, next) => {
   try {
-    const { search } = req.query;
-    const clients = await ClientService.getAll(search, req.siteId);
-    res.json(clients);
+    const { search, skip = 0, limit = 100 } = req.query;
+    const result = await ClientService.getAll(search, req.siteId, { skip: parseInt(skip), limit: parseInt(limit) });
+    res.json({ data: result.rows, total: result.total });
   } catch (err) {
     console.error('[Controller getClients] ERROR:', err.message);
     next(err);

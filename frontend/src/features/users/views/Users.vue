@@ -42,8 +42,9 @@
                 <tr v-for="user in users" :key="user.id">
                   <td>
                     <div class="d-flex align-center gap-3">
-                      <div class="avatar" :class="user.role">
-                        {{ user.name?.charAt(0).toUpperCase() }}
+                      <img v-if="user.avatar_url" :src="user.avatar_url" alt="" class="entity-thumb" style="border-radius:50%" />
+                      <div v-else class="entity-thumb entity-thumb-placeholder" style="border-radius:50%" :class="user.role">
+                        <span class="fw-600">{{ user.name?.charAt(0).toUpperCase() }}</span>
                       </div>
                       <span class="fw-600">{{ user.name }}</span>
                     </div>
@@ -129,6 +130,17 @@
                 <label class="form-label">Email</label>
                 <input v-model="form.email" type="email" class="form-control" required />
               </div>
+              <div class="form-group">
+                <label class="form-label">Avatar</label>
+                <div class="entity-image-upload" @click="$refs.userImgInput.click()">
+                  <img v-if="form.avatar_url" :src="form.avatar_url" alt="" class="entity-image-preview" style="border-radius:50%" />
+                  <div v-else class="entity-image-placeholder" style="border-radius:50%;width:100px;height:100px">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
+                    <span>Click to upload</span>
+                  </div>
+                  <input ref="userImgInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+                </div>
+              </div>
               <div class="form-group" v-if="!showEditModal">
                 <label class="form-label">Password</label>
                 <input v-model="form.password" type="password" class="form-control" required minlength="6" />
@@ -159,6 +171,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showConfirm } from '@/shared/components/ConfirmDialog.vue'
 import api from '@/shared/services/api'
 import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
 
@@ -172,12 +185,15 @@ export default {
     const submitting = ref(false)
     const showCreateModal = ref(false)
     const showEditModal = ref(false)
+    const imageFile = ref(null)
+
     const form = ref({
       id: null,
       name: '',
       email: '',
       password: '',
-      role: 'staff'
+      role: 'staff',
+      avatar_url: ''
     })
 
     const currentUser = computed(() => store.getters['auth/currentUser'])
@@ -214,18 +230,21 @@ export default {
     }
 
     const editUser = (user) => {
+      imageFile.value = null
       form.value = {
         id: user.id,
         name: user.name,
         email: user.email,
         password: '',
-        role: user.role
+        role: user.role,
+        avatar_url: user.avatar_url || ''
       }
       showEditModal.value = true
     }
 
     const deleteUser = async (user) => {
-      if (!confirm(`Are you sure you want to delete ${user.name}?`)) return
+      const ok = await showConfirm(`Are you sure you want to delete ${user.name}?`)
+      if (!ok) return
       
       try {
         await api.delete(`/users/${user.id}`)
@@ -236,13 +255,39 @@ export default {
       }
     }
 
+    const handleImageSelect = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      if (file.size > 5 * 1024 * 1024) {
+        showError('Image must be under 5MB')
+        return
+      }
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        showError('Image must be JPEG, PNG, GIF, or WebP')
+        return
+      }
+      imageFile.value = file
+      const reader = new FileReader()
+      reader.onload = (ev) => { form.value.avatar_url = ev.target.result }
+      reader.readAsDataURL(file)
+    }
+
     const handleSubmit = async () => {
       submitting.value = true
       try {
         if (showEditModal.value) {
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('avatar', imageFile.value)
+            const res = await api.put(`/users/${form.value.id}/avatar`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            form.value.avatar_url = res.data.avatar_url
+          }
           const updateData = {
             name: form.value.name,
-            role: form.value.role
+            role: form.value.role,
+            avatar_url: form.value.avatar_url
           }
           await api.put(`/users/${form.value.id}`, updateData)
           showSuccess('User updated successfully')
@@ -263,12 +308,14 @@ export default {
       showCreateModal.value = false
       showEditModal.value = false
       submitting.value = false
+      imageFile.value = null
       form.value = {
         id: null,
         name: '',
         email: '',
         password: '',
-        role: 'staff'
+        role: 'staff',
+        avatar_url: ''
       }
     }
 
@@ -288,6 +335,7 @@ export default {
       formatDate,
       editUser,
       deleteUser,
+      handleImageSelect,
       handleSubmit,
       closeModals
     }

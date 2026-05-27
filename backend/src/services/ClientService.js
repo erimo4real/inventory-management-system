@@ -4,8 +4,8 @@ import AuditService from './AuditService.js';
 const clientRepo = new ClientRepository();
 
 export default class ClientService {
-  static async getAll(search = null, siteId) {
-    return await clientRepo.findAll(siteId, search);
+  static async getAll(search = null, siteId, { skip = 0, limit = 100 } = {}) {
+    return await clientRepo.findAll(siteId, search, { skip, limit });
   }
 
   static async getById(id, siteId) {

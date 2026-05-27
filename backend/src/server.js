@@ -24,6 +24,7 @@ app.set('trust proxy', 1);
 // Security headers
 app.use(helmet({
   referrerPolicy: { policy: 'same-origin' },
+  strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true, preload: true },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -58,6 +59,16 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 app.use('/api/auth/reset-password', authLimiter);
+
+// Stricter rate limit on upload endpoints
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many uploads, please try again later' }
+});
+app.use('/api/upload', uploadLimiter);
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',')

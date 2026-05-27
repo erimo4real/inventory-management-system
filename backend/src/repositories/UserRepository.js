@@ -33,17 +33,12 @@ export default class UserRepository {
 
   async create(data) {
     const { name, email, password, role, site_id } = data;
-    
-    let siteId = site_id;
-    if (!siteId) {
-      siteId = await this.findOrCreateDefaultSite();
-    }
 
     const result = await pool.query(
       `INSERT INTO users (site_id, name, email, password, role)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, name, email, role, site_id, is_active, avatar_url, avatar_public_id, created_at`,
-      [siteId, name, email, password, role || 'staff']
+      [site_id || null, name, email, password, role || 'staff']
     );
     return result.rows[0];
   }

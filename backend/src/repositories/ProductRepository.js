@@ -8,30 +8,49 @@ export default class ProductRepository {
       LEFT JOIN suppliers s ON p.supplier_id = s.id 
       WHERE p.is_active = true AND p.site_id = $1
     `;
+    let countSql = `
+      SELECT COUNT(*) as total 
+      FROM products p 
+      LEFT JOIN suppliers s ON p.supplier_id = s.id 
+      WHERE p.is_active = true AND p.site_id = $1
+    `;
     const params = [siteId];
+    const countParams = [siteId];
     let paramCount = 2;
 
     if (query) {
-      sql += ` AND (p.name ILIKE $${paramCount} OR p.sku ILIKE $${paramCount} OR p.barcode ILIKE $${paramCount})`;
+      const clause = ` AND (p.name ILIKE $${paramCount} OR p.sku ILIKE $${paramCount} OR p.barcode ILIKE $${paramCount})`;
+      sql += clause;
+      countSql += clause;
       params.push(`%${query}%`);
+      countParams.push(`%${query}%`);
       paramCount++;
     }
 
     if (category) {
-      sql += ` AND p.category = $${paramCount}`;
+      const clause = ` AND p.category = $${paramCount}`;
+      sql += clause;
+      countSql += clause;
       params.push(category);
+      countParams.push(category);
       paramCount++;
     }
 
     if (lowStock) {
-      sql += ` AND p.quantity <= p.low_stock_threshold`;
+      const clause = ` AND p.quantity <= p.low_stock_threshold`;
+      sql += clause;
+      countSql += clause;
     }
 
     sql += ` ORDER BY p.created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
     params.push(limit, skip);
 
-    const result = await pool.query(sql, params);
-    return result.rows;
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(sql, params),
+      pool.query(countSql, countParams)
+    ]);
+
+    return { rows: dataResult.rows, total: parseInt(countResult.rows[0].total) };
   }
 
   async findById(id, siteId) {
@@ -46,12 +65,12 @@ export default class ProductRepository {
   }
 
   async create(data, siteId) {
-    const { name, sku, category, quantity, price, supplier_id, low_stock_threshold, description, barcode } = data;
+    const { name, sku, category, quantity, price, supplier_id, low_stock_threshold, description, barcode, image_url } = data;
     const result = await pool.query(
-      `INSERT INTO products (site_id, name, sku, category, quantity, price, supplier_id, low_stock_threshold, description, barcode)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO products (site_id, name, sku, category, quantity, price, supplier_id, low_stock_threshold, description, barcode, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [siteId, name, sku, category, quantity || 0, price || 0, supplier_id, low_stock_threshold || 10, description, barcode]
+      [siteId, name, sku, category, quantity || 0, price || 0, supplier_id, low_stock_threshold || 10, description, barcode, image_url]
     );
     return result.rows[0];
   }
@@ -62,7 +81,7 @@ export default class ProductRepository {
     let paramCount = 1;
 
     const allowedFields = ['name', 'sku', 'category', 'quantity', 'price', 'supplier_id', 
-      'low_stock_threshold', 'description', 'barcode', 'is_active'];
+      'low_stock_threshold', 'description', 'barcode', 'is_active', 'image_url', 'image_public_id'];
 
     for (const [key, value] of Object.entries(data)) {
       if (allowedFields.includes(key) && value !== undefined) {
@@ -110,6 +129,21 @@ export default class ProductRepository {
       [siteId]
     );
     return result.rows;
+  }
+
+  async findByIdForUpdate(client, id, siteId) {
+    const result = await client.query(
+      'SELECT id, quantity, name, sku FROM products WHERE id = $1 AND site_id = $2 AND is_active = true FOR UPDATE',
+      [id, siteId]
+    );
+    return result.rows[0];
+  }
+
+  async updateQuantity(client, id, quantity, siteId) {
+    await client.query(
+      'UPDATE products SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND site_id = $3',
+      [quantity, id, siteId]
+    );
   }
 
   async findBySku(sku, siteId) {

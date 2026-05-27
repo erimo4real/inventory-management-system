@@ -4,7 +4,7 @@ export const getProducts = async (req, res, next) => {
   try {
     const { query, category, low_stock, skip = 0, limit = 100 } = req.query;
     
-    const products = await ProductService.listProducts({
+    const result = await ProductService.listProducts({
       query,
       category,
       lowStock: low_stock === 'true',
@@ -12,7 +12,7 @@ export const getProducts = async (req, res, next) => {
       limit: parseInt(limit)
     }, req.siteId);
     
-    res.json(products);
+    res.json({ data: result.rows, total: result.total });
   } catch (err) {
     console.error('[Controller getProducts] ERROR:', err.message);
     next(err);

@@ -2,9 +2,9 @@ import VendorService from '../services/VendorService.js';
 
 export const getVendors = async (req, res, next) => {
   try {
-    const { search, category } = req.query;
-    const vendors = await VendorService.getAll(search, category, req.siteId);
-    res.json(vendors);
+    const { search, category, skip = 0, limit = 100 } = req.query;
+    const result = await VendorService.getAll(search, category, req.siteId, { skip: parseInt(skip), limit: parseInt(limit) });
+    res.json({ data: result.rows, total: result.total });
   } catch (err) {
     console.error('[Controller getVendors] ERROR:', err.message);
     next(err);

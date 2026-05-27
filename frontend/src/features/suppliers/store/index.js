@@ -2,18 +2,21 @@ import api from '@/shared/services/api'
 
 const state = {
   suppliers: [],
+  total: 0,
   loading: false,
   error: null
 }
 
 const getters = {
   allSuppliers: state => state.suppliers,
-  suppliersLoading: state => state.loading
+  suppliersLoading: state => state.loading,
+  supplierTotal: state => state.total
 }
 
 const mutations = {
-  SET_SUPPLIERS(state, suppliers) {
-    state.suppliers = suppliers
+  SET_SUPPLIERS(state, { data, total }) {
+    state.suppliers = data
+    state.total = total
   },
   ADD_SUPPLIER(state, supplier) {
     state.suppliers.unshift(supplier)
@@ -40,8 +43,9 @@ const actions = {
     commit('SET_LOADING', true)
     try {
       const response = await api.get('/suppliers', { params })
-      commit('SET_SUPPLIERS', response.data)
-      return response.data
+      const { data, total } = response.data
+      commit('SET_SUPPLIERS', { data, total })
+      return { data, total }
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.error || 'Failed to fetch suppliers')
       throw error

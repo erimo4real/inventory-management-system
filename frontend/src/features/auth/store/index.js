@@ -1,6 +1,10 @@
 import api from '@/shared/services/api'
 import Cookies from 'js-cookie'
 
+function hasAuthCookie() {
+  return !!Cookies.get('auth_status')
+}
+
 const state = {
   user: null,
   loading: false,
@@ -15,7 +19,8 @@ const getters = {
   isStaff: state => state.user?.role === 'staff',
   authLoading: state => state.loading,
   authError: state => state.error,
-  currentSiteId: state => state.user?.site_id
+  currentSiteId: state => state.user?.site_id,
+  hasAuthCookie: () => hasAuthCookie()
 }
 
 const mutations = {
@@ -95,9 +100,11 @@ const actions = {
       commit('SET_USER', response.data)
       return response.data
     } catch (error) {
-      Cookies.remove('auth_status')
-      Cookies.remove('user_role')
-      Cookies.remove('site_id')
+      const isProduction = window.location.protocol === 'https:'
+      const opts = { sameSite: 'Strict', secure: isProduction }
+      Cookies.remove('auth_status', opts)
+      Cookies.remove('user_role', opts)
+      Cookies.remove('site_id', opts)
       commit('CLEAR_AUTH')
       throw error
     } finally {
@@ -121,9 +128,11 @@ const actions = {
       await api.post('/auth/logout')
     } catch {
     }
-    Cookies.remove('auth_status')
-    Cookies.remove('user_role')
-    Cookies.remove('site_id')
+    const isProduction = window.location.protocol === 'https:'
+    const opts = { sameSite: 'Strict', secure: isProduction }
+    Cookies.remove('auth_status', opts)
+    Cookies.remove('user_role', opts)
+    Cookies.remove('site_id', opts)
     commit('CLEAR_AUTH')
   },
 
@@ -143,9 +152,11 @@ const actions = {
           Cookies.set('site_id', user.site_id, { expires: 7, sameSite: 'Strict', secure: isProduction })
         }
       } catch {
-        Cookies.remove('auth_status')
-        Cookies.remove('user_role')
-        Cookies.remove('site_id')
+        const isProduction = window.location.protocol === 'https:'
+        const opts = { sameSite: 'Strict', secure: isProduction }
+        Cookies.remove('auth_status', opts)
+        Cookies.remove('user_role', opts)
+        Cookies.remove('site_id', opts)
       }
     }
   }

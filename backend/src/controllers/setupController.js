@@ -78,6 +78,6 @@ export const initializeSystem = async (req, res) => {
     if (err.message.includes('already exists') || err.code === '23505') {
       return res.status(400).json({ error: 'Email already registered. Please use the login page.' });
     }
-    res.status(500).json({ error: 'Setup failed: ' + err.message });
+    res.status(500).json({ error: 'Setup failed. Please try again or contact support.' });
   }
 };

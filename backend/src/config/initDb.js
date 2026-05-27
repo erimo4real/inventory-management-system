@@ -171,6 +171,17 @@ const initDb = async () => {
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_public_id VARCHAR(255)`);
 
+    // Image columns for entity tables (safe to re-run)
+    await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)`);
+    await client.query(`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)`);
+    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)`);
+    await client.query(`ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)`);
+    await client.query(`ALTER TABLE sites ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE sites ADD COLUMN IF NOT EXISTS logo_public_id VARCHAR(255)`);
+
     // Indexes
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sites_slug ON sites(slug)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);

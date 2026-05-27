@@ -112,8 +112,9 @@
                 <tr v-for="vendor in vendors" :key="vendor.id" class="cursor-pointer" @click="viewVendor(vendor)">
                   <td>
                     <div class="d-flex align-center gap-3">
-                      <div class="avatar" style="background: linear-gradient(135deg, #f5576c, #e54558);">
-                        {{ vendor.name.charAt(0).toUpperCase() }}
+                      <img v-if="vendor.image_url" :src="vendor.image_url" alt="" class="entity-thumb" style="border-radius:50%" />
+                      <div v-else class="entity-thumb entity-thumb-placeholder" style="border-radius:50%;background:linear-gradient(135deg,#f5576c,#e54558);color:#fff">
+                        <span class="fw-600">{{ vendor.name.charAt(0).toUpperCase() }}</span>
                       </div>
                       <div>
                         <div class="fw-600">{{ vendor.name }}</div>
@@ -166,6 +167,18 @@
               </tbody>
             </table>
           </div>
+          <div v-if="totalPages > 1" class="pagination">
+            <button class="btn btn-sm btn-outline" :disabled="page === 1" @click="goToPage(page - 1)">Previous</button>
+            <template v-for="p in totalPages" :key="p">
+              <span v-if="totalPages <= 7 || Math.abs(p - page) <= 1 || p === 1 || p === totalPages">
+                <span v-if="p === page" class="pagination-item active">{{ p }}</span>
+                <button v-else class="btn btn-sm btn-outline pagination-item" @click="goToPage(p)">{{ p }}</button>
+              </span>
+              <span v-else-if="p === 2 && page > 3" class="pagination-ellipsis">...</span>
+              <span v-else-if="p === totalPages - 1 && page < totalPages - 2" class="pagination-ellipsis">...</span>
+            </template>
+            <button class="btn btn-sm btn-outline" :disabled="page === totalPages" @click="goToPage(page + 1)">Next</button>
+          </div>
         </div>
         
         <div v-else class="card-body">
@@ -205,6 +218,17 @@
               <div class="form-group">
                 <label class="form-label">Name *</label>
                 <input v-model="form.name" type="text" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Image</label>
+                <div class="entity-image-upload" @click="$refs.vendorImgInput.click()">
+                  <img v-if="form.image_url" :src="form.image_url" alt="" class="entity-image-preview" />
+                  <div v-else class="entity-image-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    <span>Click to upload</span>
+                  </div>
+                  <input ref="vendorImgInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+                </div>
               </div>
               <div class="form-group">
                 <label class="form-label">Company Name</label>
@@ -283,7 +307,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showConfirm } from '@/shared/components/ConfirmDialog.vue'
+import api from '@/shared/services/api'
 import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
+import { sanitizeSearch } from '@/shared/utils/sanitize'
 
 export default {
   name: 'Vendors',
@@ -293,14 +320,17 @@ export default {
     const router = useRouter()
     
     const searchQuery = ref('')
-    const categoryFilter = ref('')
+    const selectedCategory = ref('')
     const showAddModal = ref(false)
     const showEditModal = ref(false)
     const editingVendorId = ref(null)
     const stats = ref(null)
-    const categories = ref([])
     const submitting = ref(false)
+    const page = ref(1)
+    const pageSize = ref(25)
     
+    const imageFile = ref(null)
+
     const form = ref({
       name: '',
       company_name: '',
@@ -312,27 +342,39 @@ export default {
       address: '',
       category: '',
       tax_id: '',
-      notes: ''
+      notes: '',
+      image_url: ''
     })
     
     const vendors = computed(() => store.getters['vendors/allVendors'])
     const loading = computed(() => store.getters['vendors/vendorsLoading'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const canManage = computed(() => ['admin', 'manager'].includes(currentUser.value?.role))
+    const total = computed(() => store.getters['vendorTotal'])
+    const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
     
     let searchTimeout = null
     
+    const goToPage = (p) => {
+      page.value = p
+      fetchVendors()
+    }
+    
     const handleSearch = () => {
       clearTimeout(searchTimeout)
+      page.value = 1
       searchTimeout = setTimeout(() => {
         fetchVendors()
       }, 300)
     }
     
     const fetchVendors = () => {
+      const s = sanitizeSearch(searchQuery.value)
       store.dispatch('vendors/fetchVendors', {
-        search: searchQuery.value || undefined,
-        category: categoryFilter.value || undefined
+        search: s || undefined,
+        category: categoryFilter.value || undefined,
+        skip: (page.value - 1) * pageSize.value,
+        limit: pageSize.value
       })
     }
     
@@ -358,6 +400,7 @@ export default {
     
     const editVendor = (vendor) => {
       editingVendorId.value = vendor.id
+      imageFile.value = null
       form.value = {
         name: vendor.name,
         company_name: vendor.company_name || '',
@@ -369,13 +412,15 @@ export default {
         address: vendor.address || '',
         category: vendor.category || '',
         tax_id: vendor.tax_id || '',
-        notes: vendor.notes || ''
+        notes: vendor.notes || '',
+        image_url: vendor.image_url || ''
       }
       showEditModal.value = true
     }
     
     const deleteVendor = async (vendorId) => {
-      if (!confirm('Are you sure you want to delete this vendor?')) return
+      const ok = await showConfirm('Are you sure you want to delete this vendor?')
+      if (!ok) return
       try {
         await store.dispatch('vendors/deleteVendor', vendorId)
         showSuccess('Vendor deleted successfully')
@@ -385,17 +430,53 @@ export default {
       }
     }
     
+    const handleImageSelect = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      if (file.size > 5 * 1024 * 1024) {
+        showError('Image must be under 5MB')
+        return
+      }
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        showError('Image must be JPEG, PNG, GIF, or WebP')
+        return
+      }
+      imageFile.value = file
+      const reader = new FileReader()
+      reader.onload = (ev) => { form.value.image_url = ev.target.result }
+      reader.readAsDataURL(file)
+    }
+
     const handleSubmit = async () => {
       submitting.value = true
       try {
         if (showEditModal.value) {
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const res = await api.put(`/vendors/${editingVendorId.value}/image`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            form.value.image_url = res.data.url
+          }
           await store.dispatch('vendors/updateVendor', {
             id: editingVendorId.value,
             data: form.value
           })
           showSuccess('Vendor updated successfully')
         } else {
-          await store.dispatch('vendors/createVendor', form.value)
+          const newVendor = await store.dispatch('vendors/createVendor', form.value)
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const res = await api.put(`/vendors/${newVendor.id}/image`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            await store.dispatch('vendors/updateVendor', {
+              id: newVendor.id,
+              data: { image_url: res.data.url }
+            })
+          }
           showSuccess('Vendor created successfully')
         }
         closeModal()
@@ -414,6 +495,7 @@ export default {
       showEditModal.value = false
       editingVendorId.value = null
       submitting.value = false
+      imageFile.value = null
       form.value = {
         name: '',
         company_name: '',
@@ -425,7 +507,8 @@ export default {
         address: '',
         category: '',
         tax_id: '',
-        notes: ''
+        notes: '',
+        image_url: ''
       }
     }
     
@@ -447,13 +530,17 @@ export default {
       categories,
       canManage,
       submitting,
+      page,
+      totalPages,
       handleSearch,
       viewVendor,
       editVendor,
       deleteVendor,
+      handleImageSelect,
       handleSubmit,
       closeModal,
-      fetchVendors
+      fetchVendors,
+      goToPage
     }
   }
 }
@@ -612,6 +699,39 @@ export default {
 
 .text-right {
   text-align: right;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.pagination-item {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.pagination-item.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.pagination-ellipsis {
+  color: var(--gray-500);
+  font-size: 13px;
+  padding: 0 4px;
 }
 
 @media (max-width: 768px) {

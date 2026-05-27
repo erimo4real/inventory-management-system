@@ -1,18 +1,30 @@
 import pool from '../config/db.js';
 
 export default class ClientRepository {
-  async findAll(siteId, search = null) {
+  async findAll(siteId, search = null, { skip = 0, limit = 100 } = {}) {
     let query = 'SELECT * FROM clients WHERE is_active = true AND site_id = $1';
+    let countQuery = 'SELECT COUNT(*) as total FROM clients WHERE is_active = true AND site_id = $1';
     const params = [siteId];
+    const countParams = [siteId];
 
     if (search) {
-      query += ` AND (name ILIKE $2 OR company_name ILIKE $2 OR email ILIKE $2 OR phone ILIKE $2)`;
+      const searchClause = ` AND (name ILIKE $2 OR company_name ILIKE $2 OR email ILIKE $2 OR phone ILIKE $2)`;
+      query += searchClause;
+      countQuery += searchClause;
       params.push(`%${search}%`);
+      countParams.push(`%${search}%`);
     }
 
     query += ' ORDER BY created_at DESC';
-    const result = await pool.query(query, params);
-    return result.rows;
+    query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(limit, skip);
+
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(query, params),
+      pool.query(countQuery, countParams)
+    ]);
+
+    return { rows: dataResult.rows, total: parseInt(countResult.rows[0].total) };
   }
 
   async findById(id, siteId) {
@@ -31,12 +43,12 @@ export default class ClientRepository {
   }
 
   async create(data, siteId) {
-    const { name, company_name, contact_person, email, phone, address, city, country, notes } = data;
+    const { name, company_name, contact_person, email, phone, address, city, country, notes, image_url } = data;
     const result = await pool.query(
-      `INSERT INTO clients (site_id, name, company_name, contact_person, email, phone, address, city, country, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO clients (site_id, name, company_name, contact_person, email, phone, address, city, country, notes, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [siteId, name, company_name, contact_person, email, phone, address, city, country, notes]
+      [siteId, name, company_name, contact_person, email, phone, address, city, country, notes, image_url]
     );
     return result.rows[0];
   }
@@ -46,7 +58,7 @@ export default class ClientRepository {
     const values = [];
     let paramCount = 1;
 
-    const allowedFields = ['name', 'company_name', 'contact_person', 'email', 'phone', 'address', 'city', 'country', 'notes', 'is_active'];
+    const allowedFields = ['name', 'company_name', 'contact_person', 'email', 'phone', 'address', 'city', 'country', 'notes', 'is_active', 'image_url', 'image_public_id'];
 
     for (const [key, value] of Object.entries(data)) {
       if (allowedFields.includes(key) && value !== undefined) {

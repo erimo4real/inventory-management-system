@@ -150,6 +150,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showConfirm } from '@/shared/components/ConfirmDialog.vue'
 import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
 
 export default {
@@ -204,7 +205,8 @@ export default {
     }
 
     const deleteCategory = async (category) => {
-      if (!confirm(`Are you sure you want to delete "${category.name}"?`)) return
+      const ok = await showConfirm(`Are you sure you want to delete "${category.name}"?`)
+      if (!ok) return
       try {
         await store.dispatch('categories/deleteCategory', category.id)
         showSuccess('Category deleted successfully')

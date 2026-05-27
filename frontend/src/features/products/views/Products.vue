@@ -57,6 +57,7 @@
             <table class="table">
               <thead>
                 <tr>
+                  <th>Image</th>
                   <th>SKU</th>
                   <th>Name</th>
                   <th>Category</th>
@@ -67,7 +68,13 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="product in products" :key="product.id">
+                  <tr v-for="product in products" :key="product.id">
+                  <td>
+                    <img v-if="product.image_url" :src="product.image_url" alt="" class="entity-thumb" />
+                    <div v-else class="entity-thumb entity-thumb-placeholder">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                  </td>
                   <td>
                     <code class="sku-code">{{ product.sku }}</code>
                   </td>
@@ -112,6 +119,18 @@
               </tbody>
             </table>
           </div>
+          <div v-if="totalPages > 1" class="pagination">
+            <button class="btn btn-sm btn-outline" :disabled="page === 1" @click="goToPage(page - 1)">Previous</button>
+            <template v-for="p in totalPages" :key="p">
+              <span v-if="totalPages <= 7 || Math.abs(p - page) <= 1 || p === 1 || p === totalPages">
+                <span v-if="p === page" class="pagination-item active">{{ p }}</span>
+                <button v-else class="btn btn-sm btn-outline pagination-item" @click="goToPage(p)">{{ p }}</button>
+              </span>
+              <span v-else-if="p === 2 && page > 3" class="pagination-ellipsis">...</span>
+              <span v-else-if="p === totalPages - 1 && page < totalPages - 2" class="pagination-ellipsis">...</span>
+            </template>
+            <button class="btn btn-sm btn-outline" :disabled="page === totalPages" @click="goToPage(page + 1)">Next</button>
+          </div>
         </div>
         
         <div v-else class="card-body">
@@ -150,6 +169,17 @@
               <div class="form-group">
                 <label class="form-label">Name *</label>
                 <input v-model="form.name" type="text" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Image</label>
+                <div class="entity-image-upload" @click="$refs.productImageInput.click()">
+                  <img v-if="form.image_url" :src="form.image_url" alt="" class="entity-image-preview" />
+                  <div v-else class="entity-image-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Click to upload image</span>
+                  </div>
+                  <input ref="productImageInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" @change="handleImageSelect" />
+                </div>
               </div>
               <div class="row">
                 <div class="col-6">
@@ -208,6 +238,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showConfirm } from '@/shared/components/ConfirmDialog.vue'
+import api from '@/shared/services/api'
+import { sanitizeSearch } from '@/shared/utils/sanitize'
 import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
 
 export default {
@@ -223,6 +256,8 @@ export default {
     const showEditModal = ref(false)
     const editingProductId = ref(null)
     const submitting = ref(false)
+    const page = ref(1)
+    const pageSize = ref(25)
     
     const form = ref({
       name: '',
@@ -231,36 +266,52 @@ export default {
       quantity: 0,
       price: 0,
       low_stock_threshold: 10,
-      description: ''
+      description: '',
+      image_url: ''
     })
+
+    const imageFile = ref(null)
     
     const products = computed(() => store.getters['products/allProducts'])
     const productCategories = computed(() => store.getters['categories/productCategories'])
     const loading = computed(() => store.getters['products/productsLoading'])
+    const total = computed(() => store.getters['products/productTotal'])
+    const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
     
     let searchTimeout = null
     
+    const goToPage = (p) => {
+      page.value = p
+      fetchProducts()
+    }
+    
     const handleSearch = () => {
       clearTimeout(searchTimeout)
+      page.value = 1
       searchTimeout = setTimeout(() => {
         fetchProducts()
       }, 300)
     }
     
     const handleFilter = () => {
+      page.value = 1
       fetchProducts()
     }
     
     const fetchProducts = () => {
+      const q = sanitizeSearch(searchQuery.value)
       store.dispatch('products/fetchProducts', {
-        query: searchQuery.value || undefined,
+        query: q || undefined,
         category: selectedCategory.value || undefined,
-        low_stock: lowStockOnly.value || undefined
+        low_stock: lowStockOnly.value || undefined,
+        skip: (page.value - 1) * pageSize.value,
+        limit: pageSize.value
       })
     }
     
     const editProduct = (product) => {
       editingProductId.value = product.id
+      imageFile.value = null
       form.value = {
         name: product.name,
         sku: product.sku,
@@ -268,13 +319,15 @@ export default {
         quantity: product.quantity,
         price: product.price,
         low_stock_threshold: product.low_stock_threshold,
-        description: product.description || ''
+        description: product.description || '',
+        image_url: product.image_url || ''
       }
       showEditModal.value = true
     }
     
     const deleteProduct = async (productId) => {
-      if (!confirm('Are you sure you want to delete this product?')) return
+      const ok = await showConfirm('Are you sure you want to delete this product?')
+      if (!ok) return
       try {
         await store.dispatch('products/deleteProduct', productId)
         showSuccess('Product deleted successfully')
@@ -283,23 +336,62 @@ export default {
       }
     }
     
+    const handleImageSelect = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      if (file.size > 5 * 1024 * 1024) {
+        showError('Image must be under 5MB')
+        return
+      }
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        showError('Image must be JPEG, PNG, GIF, or WebP')
+        return
+      }
+      imageFile.value = file
+      const reader = new FileReader()
+      reader.onload = (ev) => { form.value.image_url = ev.target.result }
+      reader.readAsDataURL(file)
+    }
+
+    const uploadImageToEntity = async (entityType, entityId, file) => {
+      const fd = new FormData()
+      fd.append('image', file)
+      const res = await api.put(`/${entityType}/${entityId}/image`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      return res.data.url
+    }
+
     const handleSubmit = async () => {
       submitting.value = true
       try {
         if (showEditModal.value) {
+          if (imageFile.value) {
+            const url = await uploadImageToEntity('products', editingProductId.value, imageFile.value)
+            form.value.image_url = url
+          }
           await store.dispatch('products/updateProduct', {
             id: editingProductId.value,
             data: form.value
           })
           showSuccess('Product updated successfully')
         } else {
-          await store.dispatch('products/createProduct', form.value)
+          const payload = { ...form.value }
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const uploadRes = await api.post('/upload/image', fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            payload.image_url = uploadRes.data.url
+          }
+          await store.dispatch('products/createProduct', payload)
           showSuccess('Product created successfully')
         }
         closeModal()
         fetchProducts()
       } catch (error) {
-        showError(error.response?.data?.detail || 'Operation failed')
+        showError(error.response?.data?.error || error.response?.data?.detail || 'Operation failed')
       } finally {
         submitting.value = false
       }
@@ -310,6 +402,7 @@ export default {
       showEditModal.value = false
       editingProductId.value = null
       submitting.value = false
+      imageFile.value = null
       form.value = {
         name: '',
         sku: '',
@@ -317,7 +410,8 @@ export default {
         quantity: 0,
         price: 0,
         low_stock_threshold: 10,
-        description: ''
+        description: '',
+        image_url: ''
       }
     }
     
@@ -333,16 +427,21 @@ export default {
       showAddModal,
       showEditModal,
       form,
+      imageFile,
       products,
       productCategories,
       loading,
       submitting,
+      page,
+      totalPages,
       handleSearch,
       handleFilter,
       editProduct,
       deleteProduct,
+      handleImageSelect,
       handleSubmit,
-      closeModal
+      closeModal,
+      goToPage
     }
   }
 }
@@ -507,6 +606,90 @@ export default {
 
 .text-danger {
   color: var(--danger-color);
+}
+
+.entity-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--gray-200);
+}
+
+.entity-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-50);
+  color: var(--gray-400);
+}
+
+.entity-image-upload {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.entity-image-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid var(--gray-200);
+}
+
+.entity-image-placeholder {
+  width: 140px;
+  height: 100px;
+  border-radius: 8px;
+  border: 2px dashed var(--gray-300);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--gray-500);
+  font-size: 12px;
+  background: var(--gray-50);
+  transition: var(--transition);
+}
+
+.entity-image-placeholder:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: rgba(115, 103, 240, 0.05);
+}
+
+:deep(.pagination) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+:deep(.pagination-item) {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+:deep(.pagination-item.active) {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+:deep(.pagination-ellipsis) {
+  color: var(--gray-500);
+  font-size: 13px;
+  padding: 0 4px;
 }
 
 @media (max-width: 768px) {

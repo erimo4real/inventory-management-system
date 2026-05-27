@@ -93,8 +93,9 @@
                 <tr v-for="client in clients" :key="client.id" class="cursor-pointer" @click="viewClient(client)">
                   <td>
                     <div class="d-flex align-center gap-3">
-                      <div class="avatar">
-                        {{ client.name.charAt(0).toUpperCase() }}
+                      <img v-if="client.image_url" :src="client.image_url" alt="" class="entity-thumb" style="border-radius:50%" />
+                      <div v-else class="entity-thumb entity-thumb-placeholder" style="border-radius:50%">
+                        <span class="fw-600 fs-6 text-muted">{{ client.name.charAt(0).toUpperCase() }}</span>
                       </div>
                       <div>
                         <div class="fw-600">{{ client.name }}</div>
@@ -132,6 +133,18 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div v-if="totalPages > 1" class="pagination">
+            <button class="btn btn-sm btn-outline" :disabled="page === 1" @click="goToPage(page - 1)">Previous</button>
+            <template v-for="p in totalPages" :key="p">
+              <span v-if="totalPages <= 7 || Math.abs(p - page) <= 1 || p === 1 || p === totalPages">
+                <span v-if="p === page" class="pagination-item active">{{ p }}</span>
+                <button v-else class="btn btn-sm btn-outline pagination-item" @click="goToPage(p)">{{ p }}</button>
+              </span>
+              <span v-else-if="p === 2 && page > 3" class="pagination-ellipsis">...</span>
+              <span v-else-if="p === totalPages - 1 && page < totalPages - 2" class="pagination-ellipsis">...</span>
+            </template>
+            <button class="btn btn-sm btn-outline" :disabled="page === totalPages" @click="goToPage(page + 1)">Next</button>
           </div>
         </div>
         
@@ -172,6 +185,17 @@
               <div class="form-group">
                 <label class="form-label">Name *</label>
                 <input v-model="form.name" type="text" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Image</label>
+                <div class="entity-image-upload" @click="$refs.clientImgInput.click()">
+                  <img v-if="form.image_url" :src="form.image_url" alt="" class="entity-image-preview" />
+                  <div v-else class="entity-image-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+                    <span>Click to upload</span>
+                  </div>
+                  <input ref="clientImgInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+                </div>
               </div>
               <div class="form-group">
                 <label class="form-label">Company Name</label>
@@ -236,7 +260,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showConfirm } from '@/shared/components/ConfirmDialog.vue'
+import api from '@/shared/services/api'
 import { showSuccess, showError } from '@/shared/components/ToastContainer.vue'
+import { sanitizeSearch } from '@/shared/utils/sanitize'
 
 export default {
   name: 'Clients',
@@ -251,7 +278,11 @@ export default {
     const editingClientId = ref(null)
     const stats = ref(null)
     const submitting = ref(false)
+    const page = ref(1)
+    const pageSize = ref(25)
     
+    const imageFile = ref(null)
+
     const form = ref({
       name: '',
       company_name: '',
@@ -261,26 +292,38 @@ export default {
       city: '',
       country: '',
       address: '',
-      notes: ''
+      notes: '',
+      image_url: ''
     })
     
     const clients = computed(() => store.getters['clients/allClients'])
     const loading = computed(() => store.getters['clients/clientsLoading'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const canManage = computed(() => ['admin', 'manager'].includes(currentUser.value?.role))
+    const total = computed(() => store.getters['clientTotal'])
+    const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
     
     let searchTimeout = null
     
+    const goToPage = (p) => {
+      page.value = p
+      fetchClients()
+    }
+    
     const handleSearch = () => {
       clearTimeout(searchTimeout)
+      page.value = 1
       searchTimeout = setTimeout(() => {
         fetchClients()
       }, 300)
     }
     
     const fetchClients = () => {
+      const s = sanitizeSearch(searchQuery.value)
       store.dispatch('clients/fetchClients', {
-        search: searchQuery.value || undefined
+        search: s || undefined,
+        skip: (page.value - 1) * pageSize.value,
+        limit: pageSize.value
       })
     }
     
@@ -298,6 +341,7 @@ export default {
     
     const editClient = (client) => {
       editingClientId.value = client.id
+      imageFile.value = null
       form.value = {
         name: client.name,
         company_name: client.company_name || '',
@@ -307,13 +351,15 @@ export default {
         city: client.city || '',
         country: client.country || '',
         address: client.address || '',
-        notes: client.notes || ''
+        notes: client.notes || '',
+        image_url: client.image_url || ''
       }
       showEditModal.value = true
     }
     
     const deleteClient = async (clientId) => {
-      if (!confirm('Are you sure you want to delete this client?')) return
+      const ok = await showConfirm('Are you sure you want to delete this client?')
+      if (!ok) return
       try {
         await store.dispatch('clients/deleteClient', clientId)
         showSuccess('Client deleted successfully')
@@ -323,17 +369,53 @@ export default {
       }
     }
     
+    const handleImageSelect = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      if (file.size > 5 * 1024 * 1024) {
+        showError('Image must be under 5MB')
+        return
+      }
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        showError('Image must be JPEG, PNG, GIF, or WebP')
+        return
+      }
+      imageFile.value = file
+      const reader = new FileReader()
+      reader.onload = (ev) => { form.value.image_url = ev.target.result }
+      reader.readAsDataURL(file)
+    }
+
     const handleSubmit = async () => {
       submitting.value = true
       try {
         if (showEditModal.value) {
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const res = await api.put(`/clients/${editingClientId.value}/image`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            form.value.image_url = res.data.url
+          }
           await store.dispatch('clients/updateClient', {
             id: editingClientId.value,
             data: form.value
           })
           showSuccess('Client updated successfully')
         } else {
-          await store.dispatch('clients/createClient', form.value)
+          const newClient = await store.dispatch('clients/createClient', form.value)
+          if (imageFile.value) {
+            const fd = new FormData()
+            fd.append('image', imageFile.value)
+            const res = await api.put(`/clients/${newClient.id}/image`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            await store.dispatch('clients/updateClient', {
+              id: newClient.id,
+              data: { image_url: res.data.url }
+            })
+          }
           showSuccess('Client created successfully')
         }
         closeModal()
@@ -351,6 +433,7 @@ export default {
       showEditModal.value = false
       editingClientId.value = null
       submitting.value = false
+      imageFile.value = null
       form.value = {
         name: '',
         company_name: '',
@@ -360,7 +443,8 @@ export default {
         city: '',
         country: '',
         address: '',
-        notes: ''
+        notes: '',
+        image_url: ''
       }
     }
     
@@ -379,12 +463,16 @@ export default {
       stats,
       canManage,
       submitting,
+      page,
+      totalPages,
       handleSearch,
       viewClient,
       editClient,
       deleteClient,
+      handleImageSelect,
       handleSubmit,
-      closeModal
+      closeModal,
+      goToPage
     }
   }
 }
@@ -544,6 +632,39 @@ export default {
 
 .text-right {
   text-align: right;
+}
+
+:deep(.pagination) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+:deep(.pagination-item) {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+:deep(.pagination-item.active) {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+:deep(.pagination-ellipsis) {
+  color: var(--gray-500);
+  font-size: 13px;
+  padding: 0 4px;
 }
 
 @media (max-width: 768px) {

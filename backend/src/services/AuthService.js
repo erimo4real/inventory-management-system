@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import UserRepository from '../repositories/UserRepository.js';
 import EmailService from './EmailService.js';
 
@@ -46,11 +47,17 @@ export default class AuthService {
     }
 
     const isFirstUser = await userRepo.countUsers() === 0;
+    if (!isFirstUser && !data.site_id) {
+      const error = new Error('Site ID is required for registration');
+      error.status = 400;
+      throw error;
+    }
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = await userRepo.create({
       ...data,
       password: hashedPassword,
+      site_id: data.site_id ? parseInt(data.site_id) : null,
       role: isFirstUser ? 'admin' : (data.role || 'staff')
     });
 
@@ -80,6 +87,13 @@ export default class AuthService {
     if (!user) {
       const error = new Error('Invalid credentials');
       error.status = 401;
+      throw error;
+    }
+
+    const locked = await userRepo.isAccountLocked(user.id);
+    if (locked) {
+      const error = new Error('Account is temporarily locked. Please try again later.');
+      error.status = 423;
       throw error;
     }
 
@@ -164,7 +178,6 @@ export default class AuthService {
       return;
     }
 
-    const crypto = await import('crypto');
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 3600000);
 

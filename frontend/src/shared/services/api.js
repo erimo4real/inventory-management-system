@@ -6,7 +6,8 @@ const api = axios.create({
   timeout: 15000,
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest'
   }
 })
 
@@ -28,9 +29,11 @@ api.interceptors.response.use(
                           error.config?.url?.includes('/auth/register')
 
     if (error.response?.status === 401 && !isAuthRequest) {
-      Cookies.remove('auth_status')
-      Cookies.remove('user_role')
-      Cookies.remove('site_id')
+      const isProduction = window.location.protocol === 'https:'
+      const opts = { sameSite: 'Strict', secure: isProduction }
+      Cookies.remove('auth_status', opts)
+      Cookies.remove('user_role', opts)
+      Cookies.remove('site_id', opts)
       window.location.href = '/login'
     }
     return Promise.reject(error)

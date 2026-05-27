@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Cookies from 'js-cookie'
+import store from '@/shared/store'
 
 const routes = [
   {
@@ -119,15 +119,19 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!Cookies.get('auth_status')
+  const user = store.getters['auth/currentUser']
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
-  } else if (to.path === '/login' && isAuthenticated) {
+  if (to.meta.requiresAuth && !user) {
+    const hasCookie = store.getters['auth/hasAuthCookie']
+    if (hasCookie && to.path !== '/loading') {
+      next('/loading')
+    } else {
+      next('/login')
+    }
+  } else if (to.path === '/login' && user) {
     next('/')
-  } else if (to.meta.requiresAdmin && isAuthenticated) {
-    const role = Cookies.get('user_role')
-    if (role !== 'admin') {
+  } else if (to.meta.requiresAdmin && user) {
+    if (user.role !== 'admin') {
       next('/')
     } else {
       next()

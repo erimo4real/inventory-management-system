@@ -201,6 +201,10 @@ export default {
     const canManage = computed(() => ['admin', 'manager'].includes(currentUser.value?.role))
     
     const fetchVendor = async () => {
+      const vendorId = parseInt(route.params.id)
+      if (isNaN(vendorId)) {
+        return
+      }
       loading.value = true
       try {
         vendor.value = await store.dispatch('vendors/fetchVendor', route.params.id)
