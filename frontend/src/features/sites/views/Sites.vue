@@ -207,6 +207,9 @@
             </button>
           </div>
           <div class="modal-body">
+            <div class="details-logo" v-if="selectedSite?.logo_url">
+              <img :src="selectedSite.logo_url" alt="Site logo" />
+            </div>
             <div class="details-grid">
               <div class="detail-item">
                 <label>Slug</label>
@@ -570,6 +573,20 @@ export default {
 .detail-item span {
   font-size: 14px;
   color: var(--gray-800);
+}
+
+.details-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.details-logo img {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--gray-200);
 }
 
 .text-muted {
