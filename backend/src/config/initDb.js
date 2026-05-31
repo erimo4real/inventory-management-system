@@ -168,19 +168,26 @@ const initDb = async () => {
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_attempts INTEGER DEFAULT 0`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP`);
     // Add avatar columns for user profile images
-    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_public_id VARCHAR(255)`);
 
     // Image columns for entity tables (safe to re-run)
     await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)`);
-    await client.query(`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS image_url TEXT`);
     await client.query(`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)`);
-    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS image_url TEXT`);
     await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)`);
-    await client.query(`ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_url TEXT`);
     await client.query(`ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)`);
-    await client.query(`ALTER TABLE sites ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500)`);
+    await client.query(`ALTER TABLE sites ADD COLUMN IF NOT EXISTS logo_url TEXT`);
     await client.query(`ALTER TABLE sites ADD COLUMN IF NOT EXISTS logo_public_id VARCHAR(255)`);
+
+    // Migrate existing VARCHAR(500) image columns to TEXT
+    await client.query(`ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT`);
+    await client.query(`ALTER TABLE suppliers ALTER COLUMN image_url TYPE TEXT`);
+    await client.query(`ALTER TABLE clients ALTER COLUMN image_url TYPE TEXT`);
+    await client.query(`ALTER TABLE vendors ALTER COLUMN image_url TYPE TEXT`);
+    await client.query(`ALTER TABLE sites ALTER COLUMN logo_url TYPE TEXT`);
 
     // Indexes
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sites_slug ON sites(slug)`);
