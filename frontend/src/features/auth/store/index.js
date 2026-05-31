@@ -123,6 +123,11 @@ const actions = {
         const response = await api.get('/auth/me')
         commit('SET_USER', response.data)
       } catch {
+        const isProduction = window.location.protocol === 'https:'
+        const opts = { sameSite: 'strict', secure: isProduction, path: '/' }
+        Cookies.remove('auth_status', opts)
+        Cookies.remove('user_role', opts)
+        Cookies.remove('site_id', opts)
         commit('CLEAR_AUTH')
       }
     }
