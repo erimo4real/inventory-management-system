@@ -377,7 +377,8 @@ export default {
           })
           showSuccess('Site updated successfully')
         } else {
-          const newSite = await store.dispatch('sites/createSite', form.value)
+          const { logo_url, ...createData } = form.value
+          const newSite = await store.dispatch('sites/createSite', createData)
           if (imageFile.value) {
             const fd = new FormData()
             fd.append('image', imageFile.value)
