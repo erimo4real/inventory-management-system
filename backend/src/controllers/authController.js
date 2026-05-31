@@ -84,11 +84,11 @@ export const forgotPassword = async (req, res, next) => {
 export const logout = async (req, res, next) => {
   try {
     const isProduction = process.env.NODE_ENV === 'production';
-    const opts = { httpOnly: true, secure: isProduction, sameSite: 'strict', path: '/' };
-    res.clearCookie('token', opts);
-    res.clearCookie('auth_status', { secure: isProduction, sameSite: 'strict', path: '/' });
-    res.clearCookie('user_role', { secure: isProduction, sameSite: 'strict', path: '/' });
-    res.clearCookie('site_id', { secure: isProduction, sameSite: 'strict', path: '/' });
+    const baseOpts = { secure: isProduction, sameSite: 'strict', path: '/' };
+    res.cookie('token', '', { ...baseOpts, httpOnly: true, maxAge: 0 });
+    res.cookie('auth_status', '', { ...baseOpts, maxAge: 0 });
+    res.cookie('user_role', '', { ...baseOpts, maxAge: 0 });
+    res.cookie('site_id', '', { ...baseOpts, maxAge: 0 });
     res.json({ message: 'Logged out successfully' });
   } catch (err) {
     next(err);

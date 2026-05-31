@@ -93,7 +93,7 @@
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                   <span>Click to upload</span>
                 </div>
-                <input ref="supplierImgInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+                <input ref="supplierImgInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" @change="handleImageSelect" />
               </div>
             </div>
             <div class="form-group">
@@ -160,7 +160,7 @@ export default {
     
     const suppliers = computed(() => store.getters['suppliers/allSuppliers'])
     const loading = computed(() => store.getters['suppliers/suppliersLoading'])
-    const total = computed(() => store.getters['supplierTotal'])
+    const total = computed(() => store.getters['suppliers/supplierTotal'])
     const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
     
     let searchTimeout = null
@@ -353,7 +353,7 @@ export default {
 
 .suppliers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
   gap: 20px;
 }
 
@@ -545,5 +545,30 @@ export default {
   color: var(--gray-500);
   font-size: 13px;
   padding: 0 4px;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .search-box input {
+    width: 100%;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    margin: 16px;
+    padding: 24px;
+  }
+
+  .supplier-card {
+    padding: 16px;
+  }
 }
 </style>

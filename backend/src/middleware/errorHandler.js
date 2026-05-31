@@ -15,10 +15,9 @@ export const errorHandler = (err, req, res, next) => {
   }
   
   const status = err.status || 500;
-  const isProduction = process.env.NODE_ENV === 'production';
-  
+
   res.status(status).json({
-    error: isProduction && status === 500 ? 'Internal server error' : (err.message || 'Internal server error')
+    error: status >= 500 ? 'Internal server error' : 'Bad request'
   });
 };
 

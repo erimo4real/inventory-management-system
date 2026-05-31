@@ -126,7 +126,8 @@ const actions = {
   async logout({ commit }) {
     try {
       await api.post('/auth/logout')
-    } catch {
+    } catch (err) {
+      console.warn('[AuthStore] Logout API call failed, clearing local state anyway:', err.message)
     }
     const isProduction = window.location.protocol === 'https:'
     const opts = { sameSite: 'Strict', secure: isProduction }

@@ -95,7 +95,7 @@ export default class SiteRepository {
 
   async getSiteUsers(siteId) {
     const result = await pool.query(
-      `SELECT u.*, us.role as site_role
+      `SELECT u.id, u.name, u.email, u.role, u.is_active, u.avatar_url, u.created_at, us.role as site_role
        FROM users u
        INNER JOIN user_sites us ON u.id = us.user_id
        WHERE us.site_id = $1 AND u.is_active = true AND us.is_active = true

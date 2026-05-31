@@ -8,8 +8,9 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import ToastContainer from '@/shared/components/ToastContainer.vue'
 import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
 import Loading from '@/features/loading/views/Loading.vue'
@@ -19,13 +20,24 @@ export default {
   components: { ToastContainer, ConfirmDialog, Loading },
   setup() {
     const store = useStore()
+    const router = useRouter()
     const isLoading = ref(true)
+
+    const onUnauthorized = () => {
+      store.commit('auth/CLEAR_AUTH')
+      router.push('/login')
+    }
 
     onMounted(async () => {
       await store.dispatch('auth/initAuth')
+      window.addEventListener('auth:unauthorized', onUnauthorized)
       setTimeout(() => {
         isLoading.value = false
       }, 500)
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('auth:unauthorized', onUnauthorized)
     })
 
     return { isLoading }

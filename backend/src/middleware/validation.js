@@ -55,8 +55,12 @@ export const validateSupplier = (req, res, next) => {
     errors.push('Contact person must be 200 characters or less');
   }
 
-  if (email && typeof email === 'string' && email.length > 255) {
-    errors.push('Email must be 255 characters or less');
+  if (email && typeof email === 'string') {
+    if (email.length > 255) {
+      errors.push('Email must be 255 characters or less');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('Invalid email format');
+    }
   }
 
   if (phone && typeof phone === 'string' && phone.length > 50) {
@@ -80,6 +84,8 @@ export const validateInventory = (req, res, next) => {
 
   if (!product_id) {
     errors.push('Product ID is required');
+  } else if (isNaN(parseInt(product_id))) {
+    errors.push('Product ID must be a number');
   }
 
   if (quantity === undefined || quantity <= 0) {
@@ -111,8 +117,12 @@ export const validateEntityInput = (req, res, next) => {
     errors.push('Contact person must be 200 characters or less');
   }
 
-  if (email && typeof email === 'string' && email.length > 255) {
-    errors.push('Email must be 255 characters or less');
+  if (email && typeof email === 'string') {
+    if (email.length > 255) {
+      errors.push('Email must be 255 characters or less');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('Invalid email format');
+    }
   }
 
   if (phone && typeof phone === 'string' && phone.length > 50) {
@@ -212,8 +222,12 @@ export const validateSite = (req, res, next) => {
     errors.push('Slug must be 100 characters or less');
   }
 
-  if (email && typeof email === 'string' && email.length > 255) {
-    errors.push('Email must be 255 characters or less');
+  if (email && typeof email === 'string') {
+    if (email.length > 255) {
+      errors.push('Email must be 255 characters or less');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('Invalid email format');
+    }
   }
 
   if (phone && typeof phone === 'string' && phone.length > 50) {

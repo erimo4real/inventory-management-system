@@ -26,7 +26,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const isAuthRequest = error.config?.url?.includes('/auth/login') ||
-                          error.config?.url?.includes('/auth/register')
+                          error.config?.url?.includes('/auth/register') ||
+                          error.config?.url?.includes('/auth/logout')
 
     if (error.response?.status === 401 && !isAuthRequest) {
       const isProduction = window.location.protocol === 'https:'
@@ -34,7 +35,7 @@ api.interceptors.response.use(
       Cookies.remove('auth_status', opts)
       Cookies.remove('user_role', opts)
       Cookies.remove('site_id', opts)
-      window.location.href = '/login'
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
     }
     return Promise.reject(error)
   }

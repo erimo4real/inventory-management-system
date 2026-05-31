@@ -91,7 +91,7 @@
               </thead>
               <tbody>
                 <tr v-for="client in clients" :key="client.id" class="cursor-pointer" @click="viewClient(client)">
-                  <td>
+                  <td data-label="Client">
                     <div class="d-flex align-center gap-3">
                       <img v-if="client.image_url" :src="client.image_url" alt="" class="entity-thumb" style="border-radius:50%" />
                       <div v-else class="entity-thumb entity-thumb-placeholder" style="border-radius:50%">
@@ -103,18 +103,18 @@
                       </div>
                     </div>
                   </td>
-                  <td>{{ client.company_name || '-' }}</td>
-                  <td>
+                  <td data-label="Company">{{ client.company_name || '-' }}</td>
+                  <td data-label="Contact">
                     <div v-if="client.email" class="small">{{ client.email }}</div>
                     <div v-if="client.phone" class="text-muted small">{{ client.phone }}</div>
                   </td>
-                  <td>
+                  <td data-label="Location">
                     <span v-if="client.city || client.country">
                       {{ [client.city, client.country].filter(Boolean).join(', ') }}
                     </span>
                     <span v-else class="text-muted">-</span>
                   </td>
-                  <td v-if="canManage" class="text-right" @click.stop>
+                  <td data-label="Actions" v-if="canManage" class="text-right" @click.stop>
                     <div class="d-flex gap-2 justify-end">
                       <button class="btn btn-sm btn-outline" @click="editClient(client)" title="Edit">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -194,7 +194,7 @@
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
                     <span>Click to upload</span>
                   </div>
-                  <input ref="clientImgInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+                  <input ref="clientImgInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" @change="handleImageSelect" />
                 </div>
               </div>
               <div class="form-group">
@@ -300,7 +300,7 @@ export default {
     const loading = computed(() => store.getters['clients/clientsLoading'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const canManage = computed(() => ['admin', 'manager'].includes(currentUser.value?.role))
-    const total = computed(() => store.getters['clientTotal'])
+    const total = computed(() => store.getters['clients/clientTotal'])
     const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
     
     let searchTimeout = null
@@ -675,6 +675,14 @@ export default {
   
   .search-box .form-control {
     width: 100%;
+  }
+
+  .row [class*="col-"] {
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 22px;
   }
 }
 </style>

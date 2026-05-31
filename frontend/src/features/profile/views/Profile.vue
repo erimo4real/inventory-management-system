@@ -240,7 +240,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import api from '@/shared/services/api'
 import AppLayout from '@/shared/components/AppLayout.vue'
@@ -254,6 +254,10 @@ export default {
     const avatarUploading = ref(false)
     const previewUrl = ref(null)
     
+    onUnmounted(() => {
+      if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+    })
+
     const user = computed(() => store.getters['auth/currentUser'])
     const loading = computed(() => store.getters['auth/authLoading'])
     const isAdmin = computed(() => store.getters['auth/isAdmin'])
@@ -273,6 +277,7 @@ export default {
         return
       }
 
+      if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
       previewUrl.value = URL.createObjectURL(file)
 
       const formData = new FormData()
@@ -284,6 +289,7 @@ export default {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         store.commit('auth/SET_USER', { ...user.value, avatar_url: response.data.avatar_url })
+        previewUrl.value = null
         showSuccess('Avatar updated successfully')
       } catch (error) {
         previewUrl.value = null

@@ -24,14 +24,14 @@ const state = reactive({
   message: ''
 })
 
-let resolveFn = null
+const resolveQueue = []
 
 export function showConfirm(message, title = 'Confirm') {
   state.visible = true
   state.title = title
   state.message = message
   return new Promise((resolve) => {
-    resolveFn = resolve
+    resolveQueue.push(resolve)
   })
 }
 
@@ -45,11 +45,13 @@ export default {
   name: 'ConfirmDialog',
   setup() {
     const handleConfirm = () => {
-      if (resolveFn) resolveFn(true)
+      const fns = resolveQueue.splice(0)
+      fns.forEach(fn => fn(true))
       close()
     }
     const handleCancel = () => {
-      if (resolveFn) resolveFn(false)
+      const fns = resolveQueue.splice(0)
+      fns.forEach(fn => fn(false))
       close()
     }
     return { ...state, handleConfirm, handleCancel }

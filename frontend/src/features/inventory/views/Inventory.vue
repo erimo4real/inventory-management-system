@@ -94,7 +94,7 @@
                 {{ transaction.type }}
               </div>
               <div class="transaction-details">
-                <span class="product-name">Product: {{ transaction.product_id.slice(-8) }}</span>
+                <span class="product-name">Product: {{ String(transaction.product_id).slice(-8) }}</span>
                 <span class="transaction-note">{{ transaction.note || 'No note' }}</span>
               </div>
               <div class="transaction-qty">
@@ -685,6 +685,10 @@ export default {
   .page-header {
     flex-direction: column;
     gap: 16px;
+  }
+
+  .row [class*="col-"] {
+    width: 100%;
   }
   
   .transaction-item {

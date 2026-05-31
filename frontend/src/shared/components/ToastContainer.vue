@@ -55,31 +55,19 @@ export default {
   font-size: 14px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   animation: slideIn 0.3s ease;
+  max-width: 90vw;
+  word-break: break-word;
 }
 
-.toast.success {
-  background: #10b981;
-  color: white;
-}
-
-.toast.error {
-  background: #ef4444;
-  color: white;
-}
-
-.toast.info {
-  background: #3b82f6;
-  color: white;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+@media (max-width: 768px) {
+  .toast-container {
+    right: 12px;
+    left: 12px;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+
+  .toast {
+    width: 100%;
+    font-size: 13px;
   }
 }
 </style>

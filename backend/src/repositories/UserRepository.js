@@ -3,7 +3,7 @@ import pool from '../config/db.js';
 export default class UserRepository {
   async findByEmail(email) {
     const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1 AND is_active = true',
+      'SELECT id, name, email, role, site_id, password, failed_attempts, locked_until, is_active, avatar_url, avatar_public_id, created_at FROM users WHERE email = $1 AND is_active = true',
       [email]
     );
     return result.rows[0];
@@ -76,7 +76,14 @@ export default class UserRepository {
     return result.rows[0];
   }
 
-  async findAll() {
+  async findAll(siteId) {
+    if (siteId) {
+      const result = await pool.query(
+        'SELECT id, name, email, role, is_active, avatar_url, created_at FROM users WHERE site_id = $1 AND is_active = true ORDER BY created_at DESC',
+        [siteId]
+      );
+      return result.rows;
+    }
     const result = await pool.query(
       'SELECT id, name, email, role, is_active, avatar_url, created_at FROM users WHERE is_active = true ORDER BY created_at DESC'
     );
@@ -114,7 +121,7 @@ export default class UserRepository {
 
   async findByResetToken(token) {
     const result = await pool.query(
-      'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > NOW() AND is_active = true',
+      'SELECT id, name, email, role, site_id, is_active, avatar_url, avatar_public_id, reset_token, reset_token_expires, created_at FROM users WHERE reset_token = $1 AND reset_token_expires > NOW() AND is_active = true',
       [token]
     );
     return result.rows[0];

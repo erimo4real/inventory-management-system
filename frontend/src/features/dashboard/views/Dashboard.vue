@@ -220,6 +220,117 @@
           </div>
         </div>
       </div>
+
+      <!-- AI Insights -->
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header">
+            <h4>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7367f0" stroke-width="2" style="vertical-align:middle;margin-right:6px">
+                <path d="M12 2a4 4 0 0 1 4 4c0 2-2 4-4 4s-4-2-4-4 2-4 4-4z"/>
+                <path d="M12 14c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z"/>
+                <line x1="19" y1="7" x2="21" y2="7"/>
+                <line x1="19" y1="10" x2="21" y2="10"/>
+                <line x1="3" y1="7" x2="5" y2="7"/>
+                <line x1="3" y1="10" x2="5" y2="10"/>
+              </svg>
+              AI Predictions
+            </h4>
+            <span v-if="predictions.summary" class="badge" :class="predictions.summary.low_stock > 0 ? 'badge-danger' : 'badge-success'">
+              {{ predictions.summary.low_stock }} at risk
+            </span>
+          </div>
+          <div class="card-body">
+            <div v-if="predictions.predictions?.length" class="alert-list">
+              <div
+                v-for="p in predictions.predictions.filter(p => p.status !== 'healthy' && p.status !== 'no_data').slice(0, 5)"
+                :key="p.product_id"
+                class="alert-item"
+              >
+                <div class="alert-icon" :class="p.status === 'out_of_stock' ? 'danger' : p.status === 'will_stock_out' ? 'warning' : 'danger'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div class="alert-content">
+                  <span class="alert-name">{{ p.name }}</span>
+                  <span class="alert-sku">{{ p.sku }}</span>
+                </div>
+                <div class="alert-quantity" style="text-align:right">
+                  <div style="font-size:13px;font-weight:600">{{ p.quantity }} in stock</div>
+                  <div style="font-size:11px;color:var(--gray-500)">
+                    <template v-if="p.status === 'out_of_stock'">OUT OF STOCK</template>
+                    <template v-else-if="p.days_until_empty !== null">{{ p.days_until_empty }} days left</template>
+                    <template v-else>No consumption data</template>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="empty-state">
+              <div class="empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <h4>No Predictions Available</h4>
+              <p>Stock more products or add transaction history</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h4>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea5455" stroke-width="2" style="vertical-align:middle;margin-right:6px">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              Anomaly Detection
+            </h4>
+            <span v-if="anomalies?.total_anomalies" class="badge" :class="anomalies.total_anomalies > 0 ? 'badge-danger' : 'badge-success'">
+              {{ anomalies.total_anomalies }} detected
+            </span>
+          </div>
+          <div class="card-body">
+            <div v-if="anomalies.anomalies?.length" class="alert-list">
+              <div
+                v-for="a in anomalies.anomalies.slice(0, 5)"
+                :key="a.id"
+                class="alert-item"
+              >
+                <div class="alert-icon danger">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div class="alert-content">
+                  <span class="alert-name">{{ a.product_name }}</span>
+                  <span class="alert-sku">{{ a.type }} {{ Math.abs(a.quantity) }} units (z={{ a.z_score }})</span>
+                </div>
+                <div class="alert-quantity">
+                  <span class="qty-badge danger">{{ a.user_name || 'System' }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="empty-state">
+              <div class="empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <h4>No Anomalies Detected</h4>
+              <p>All transactions appear normal</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>
@@ -236,6 +347,8 @@ export default {
   setup() {
     const store = useStore()
     const summary = ref({})
+    const predictions = ref({ predictions: [], summary: null })
+    const anomalies = ref({ anomalies: [], total_anomalies: 0 })
     
     const recentTransactions = computed(() => store.getters['inventory/allTransactions'])
     
@@ -251,26 +364,23 @@ export default {
     
     const categoryData = computed(() => {
       const colors = ['#7367f0', '#28c76f', '#ff9f43', '#00cfe8', '#ea5455']
-      const categories = [
-        { name: 'Electronics', value: 12 },
-        { name: 'Furniture', value: 8 },
-        { name: 'Office Supplies', value: 15 },
-        { name: 'IT Equipment', value: 6 },
-        { name: 'Safety Gear', value: 4 }
-      ]
+      const raw = summary.value?.products?.by_category
+      if (!raw || !Array.isArray(raw) || raw.length === 0) return []
       
-      const total = categories.reduce((sum, c) => sum + c.value, 0)
+      const total = raw.reduce((sum, c) => sum + Number(c.total_stock || c.product_count || 0), 0)
       let offset = 0
       
-      return categories.map((cat, i) => {
-        const percent = (cat.value / total) * 100
+      return raw.slice(0, 5).map((cat, i) => {
+        const value = Number(cat.total_stock || cat.product_count || 0)
+        const percent = total > 0 ? (value / total) * 100 : 0
         const circumference = 2 * Math.PI * 40
         const dashArray = `${(percent / 100) * circumference} ${circumference}`
         const dashOffset = -(offset / 100) * circumference
         offset += percent
         
         return {
-          ...cat,
+          name: cat.category || 'Uncategorized',
+          value,
           color: colors[i],
           dashArray,
           dashOffset,
@@ -285,8 +395,24 @@ export default {
     
     const fetchSummary = async () => {
       try {
-        const response = await api.get('/dashboard/stats')
-        summary.value = response.data
+        const [statsRes, reportRes, aiPredRes, aiAnomRes] = await Promise.allSettled([
+          api.get('/dashboard/stats'),
+          api.get('/reports/daily'),
+          api.get('/ai/predictions'),
+          api.get('/ai/anomalies')
+        ])
+        if (statsRes.status === 'fulfilled') {
+          summary.value = statsRes.value.data
+        }
+        if (reportRes.status === 'fulfilled' && reportRes.value.data?.products) {
+          summary.value = { ...summary.value, products: reportRes.value.data.products }
+        }
+        if (aiPredRes.status === 'fulfilled') {
+          predictions.value = aiPredRes.value.data
+        }
+        if (aiAnomRes.status === 'fulfilled') {
+          anomalies.value = aiAnomRes.value.data
+        }
       } catch (error) {
         console.error('Failed to fetch dashboard summary:', error)
       }
@@ -314,6 +440,8 @@ export default {
     
     return {
       summary,
+      predictions,
+      anomalies,
       recentTransactions,
       monthlyData,
       categoryData,
@@ -787,6 +915,20 @@ export default {
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .donut-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .chart-card {
+    padding: 16px;
+  }
+
+  .stat-card {
+    padding: 16px;
   }
 }
 </style>

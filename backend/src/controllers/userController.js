@@ -11,7 +11,7 @@ const userRepo = new UserRepository();
 export const getUsers = async (req, res, next) => {
   try {
     const siteId = req.siteId || req.user?.site_id;
-    const users = siteId ? await userRepo.findAll() : [];
+    const users = siteId ? await userRepo.findAll(siteId) : [];
     res.json(users);
   } catch (err) {
     console.error('[UserController getUsers] ERROR:', err.message);
@@ -62,7 +62,7 @@ export const createUser = async (req, res, next) => {
       return res.status(400).json({ error: 'Email already exists' });
     }
     
-    const user = await userRepo.create(req.body);
+    const user = await userRepo.create({ ...req.body, site_id: req.body.site_id || req.siteId || req.user?.site_id });
     res.status(201).json(user);
   } catch (err) {
     console.error('[UserController createUser] ERROR:', err.message);

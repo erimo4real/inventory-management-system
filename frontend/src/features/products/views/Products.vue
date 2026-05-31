@@ -69,20 +69,20 @@
               </thead>
               <tbody>
                   <tr v-for="product in products" :key="product.id">
-                  <td>
+                  <td data-label="Image">
                     <img v-if="product.image_url" :src="product.image_url" alt="" class="entity-thumb" />
                     <div v-else class="entity-thumb entity-thumb-placeholder">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="SKU">
                     <code class="sku-code">{{ product.sku }}</code>
                   </td>
-                  <td class="fw-600">{{ product.name }}</td>
-                  <td>
+                  <td data-label="Name" class="fw-600">{{ product.name }}</td>
+                  <td data-label="Category">
                     <span class="badge badge-primary">{{ product.category }}</span>
                   </td>
-                  <td>
+                  <td data-label="Quantity">
                     <span 
                       class="fw-600" 
                       :class="{ 'text-danger': product.quantity <= product.low_stock_threshold }"
@@ -93,13 +93,13 @@
                       Low
                     </span>
                   </td>
-                  <td>${{ typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2) }}</td>
-                  <td>
+                  <td data-label="Price">${{ typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price || 0).toFixed(2) }}</td>
+                  <td data-label="Status">
                     <span class="badge" :class="product.is_active ? 'badge-success' : 'badge-secondary'">
                       {{ product.is_active ? 'Active' : 'Inactive' }}
                     </span>
                   </td>
-                  <td class="text-right">
+                  <td data-label="Actions" class="text-right">
                     <div class="d-flex gap-2 justify-end">
                       <button class="btn btn-sm btn-outline" @click="editProduct(product)" title="Edit">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -699,6 +699,16 @@ export default {
   }
   
   .search-box .form-control {
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .row [class*="col-"] {
     width: 100%;
   }
 }

@@ -171,6 +171,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import AppLayout from '@/shared/components/AppLayout.vue'
+import { showError } from '@/shared/components/ToastContainer.vue'
 
 export default {
   name: 'VendorProfile',
@@ -254,7 +255,7 @@ export default {
         closeEditModal()
         fetchVendor()
       } catch (error) {
-        alert(error.response?.data?.error || error.response?.data?.detail || 'Update failed')
+        showError(error.response?.data?.error || error.response?.data?.detail || 'Update failed')
       }
     }
     

@@ -40,7 +40,7 @@
               </thead>
               <tbody>
                 <tr v-for="user in users" :key="user.id">
-                  <td>
+                  <td data-label="User">
                     <div class="d-flex align-center gap-3">
                       <img v-if="user.avatar_url" :src="user.avatar_url" alt="" class="entity-thumb" style="border-radius:50%" />
                       <div v-else class="entity-thumb entity-thumb-placeholder" style="border-radius:50%" :class="user.role">
@@ -49,8 +49,8 @@
                       <span class="fw-600">{{ user.name }}</span>
                     </div>
                   </td>
-                  <td>{{ user.email }}</td>
-                  <td>
+                  <td data-label="Email">{{ user.email }}</td>
+                  <td data-label="Role">
                     <span class="badge" :class="getRoleBadgeClass(user.role)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
                         <path v-if="user.role === 'admin'" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -60,8 +60,8 @@
                       {{ user.role }}
                     </span>
                   </td>
-                  <td class="text-muted">{{ formatDate(user.created_at) }}</td>
-                  <td class="text-right">
+                  <td data-label="Created" class="text-muted">{{ formatDate(user.created_at) }}</td>
+                  <td data-label="Actions" class="text-right">
                     <div class="d-flex gap-2 justify-end">
                       <button class="btn btn-sm btn-outline" @click="editUser(user)" title="Edit">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -138,19 +138,26 @@
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
                     <span>Click to upload</span>
                   </div>
-                  <input ref="userImgInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+                  <input ref="userImgInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" @change="handleImageSelect" />
                 </div>
               </div>
               <div class="form-group" v-if="!showEditModal">
                 <label class="form-label">Password</label>
                 <input v-model="form.password" type="password" class="form-control" required minlength="6" />
               </div>
-              <div class="form-group mb-0">
+              <div class="form-group">
                 <label class="form-label">Role</label>
                 <select v-model="form.role" class="form-control" required>
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
                   <option value="staff">Staff</option>
+                </select>
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label">Site</label>
+                <select v-model="form.site_id" class="form-control" required>
+                  <option value="" disabled>Select a site</option>
+                  <option v-for="site in sites" :key="site.id" :value="site.id">{{ site.name }}</option>
                 </select>
               </div>
             </div>
@@ -181,6 +188,7 @@ export default {
   setup() {
     const store = useStore()
     const users = ref([])
+    const sites = ref([])
     const loading = ref(false)
     const submitting = ref(false)
     const showCreateModal = ref(false)
@@ -193,7 +201,8 @@ export default {
       email: '',
       password: '',
       role: 'staff',
-      avatar_url: ''
+      avatar_url: '',
+      site_id: ''
     })
 
     const currentUser = computed(() => store.getters['auth/currentUser'])
@@ -220,6 +229,15 @@ export default {
       }
     }
 
+    const fetchSites = async () => {
+      try {
+        const response = await api.get('/sites')
+        sites.value = response.data
+      } catch (error) {
+        console.error('Failed to fetch sites:', error)
+      }
+    }
+
     const formatDate = (date) => {
       if (!date) return 'N/A'
       return new Date(date).toLocaleDateString('en-US', {
@@ -237,7 +255,8 @@ export default {
         email: user.email,
         password: '',
         role: user.role,
-        avatar_url: user.avatar_url || ''
+        avatar_url: user.avatar_url || '',
+        site_id: user.site_id || ''
       }
       showEditModal.value = true
     }
@@ -315,16 +334,19 @@ export default {
         email: '',
         password: '',
         role: 'staff',
-        avatar_url: ''
+        avatar_url: '',
+        site_id: ''
       }
     }
 
     onMounted(() => {
       fetchUsers()
+      fetchSites()
     })
 
     return {
       users,
+      sites,
       loading,
       submitting,
       showCreateModal,
@@ -480,6 +502,10 @@ export default {
   .page-header {
     flex-direction: column;
     gap: 16px;
+  }
+
+  .page-title {
+    font-size: 22px;
   }
 }
 </style>

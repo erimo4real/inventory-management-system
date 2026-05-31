@@ -11,8 +11,26 @@
 </template>
 
 <script>
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+
 export default {
-  name: 'LoadingScreen'
+  name: 'LoadingScreen',
+  setup() {
+    const store = useStore()
+    const router = useRouter()
+
+    const user = store.getters['auth/currentUser']
+    const hasCookie = store.getters['auth/hasAuthCookie']
+
+    if (user) {
+      router.replace('/')
+    } else if (!hasCookie) {
+      router.replace('/login')
+    }
+
+    return {}
+  }
 }
 </script>
 

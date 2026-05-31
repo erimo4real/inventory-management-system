@@ -1,11 +1,8 @@
-import { ref } from 'vue'
-
-const loading = ref(false)
+let loadingCount = 0
 
 export const useLoading = () => {
-  const show = () => loading.value = true
-  const hide = () => loading.value = false
-  return { loading, show, hide }
+  const show = () => { loadingCount++ }
+  const hide = () => { loadingCount = Math.max(0, loadingCount - 1) }
+  const isLoading = () => loadingCount > 0
+  return { isLoading, show, hide }
 }
-
-export default { loading }

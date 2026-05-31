@@ -25,15 +25,31 @@ const storage = multer.diskStorage({
   }
 });
 
+const MAGIC_BYTES = {
+  'image/jpeg': [0xFF, 0xD8, 0xFF],
+  'image/png': [0x89, 0x50, 0x4E, 0x47],
+  'image/gif': [0x47, 0x49, 0x46],
+  'image/webp': [0x52, 0x49, 0x46, 0x46]
+};
+
+function validateMagicBytes(buffer, mimeType) {
+  const expected = MAGIC_BYTES[mimeType];
+  if (!expected) return false;
+  for (let i = 0; i < expected.length; i++) {
+    if (buffer[i] !== expected[i]) return false;
+  }
+  return true;
+}
+
 // File filter - only allow images
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'), false);
+  if (!allowedTypes.includes(file.mimetype)) {
+    return cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'), false);
   }
+  
+  cb(null, true);
 };
 
 export const upload = multer({
@@ -53,6 +69,12 @@ export const uploadImage = async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const fileBuffer = fs.readFileSync(req.file.path);
+    if (!validateMagicBytes(fileBuffer, req.file.mimetype)) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ error: 'Invalid file content' });
     }
 
     const folder = req.body.folder || 'inventory';

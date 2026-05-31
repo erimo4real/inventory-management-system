@@ -40,6 +40,7 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/shared/services/api'
 
 export default {
   name: 'Setup',
@@ -58,24 +59,13 @@ export default {
       message.value = null
 
       try {
-        const response = await fetch('/api/setup/initialize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form.value)
-        })
-
-        const data = await response.json()
-
-        if (response.ok) {
-          message.value = { type: 'success', text: 'Admin account created! Redirecting to login...' }
-          setTimeout(() => {
-            router.push('/login')
-          }, 2000)
-        } else {
-          message.value = { type: 'error', text: data.error || 'Setup failed' }
-        }
+        const response = await api.post('/setup/initialize', form.value)
+        message.value = { type: 'success', text: 'Admin account created! Redirecting to login...' }
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
       } catch (err) {
-        message.value = { type: 'error', text: 'Connection failed. Is the server running?' }
+        message.value = { type: 'error', text: err.response?.data?.error || 'Setup failed' }
       } finally {
         loading.value = false
       }

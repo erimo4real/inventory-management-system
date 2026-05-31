@@ -110,7 +110,7 @@
               </thead>
               <tbody>
                 <tr v-for="vendor in vendors" :key="vendor.id" class="cursor-pointer" @click="viewVendor(vendor)">
-                  <td>
+                  <td data-label="Vendor">
                     <div class="d-flex align-center gap-3">
                       <img v-if="vendor.image_url" :src="vendor.image_url" alt="" class="entity-thumb" style="border-radius:50%" />
                       <div v-else class="entity-thumb entity-thumb-placeholder" style="border-radius:50%;background:linear-gradient(135deg,#f5576c,#e54558);color:#fff">
@@ -122,11 +122,11 @@
                       </div>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Category">
                     <span v-if="vendor.category" class="badge badge-danger">{{ vendor.category }}</span>
                     <span v-else class="text-muted">-</span>
                   </td>
-                  <td>
+                  <td data-label="Contact">
                     <div v-if="vendor.email" class="small d-flex align-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
@@ -141,13 +141,13 @@
                       {{ vendor.phone }}
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Location">
                     <span v-if="vendor.city || vendor.country">
                       {{ [vendor.city, vendor.country].filter(Boolean).join(', ') }}
                     </span>
                     <span v-else class="text-muted">-</span>
                   </td>
-                  <td v-if="canManage" class="text-right" @click.stop>
+                  <td data-label="Actions" v-if="canManage" class="text-right" @click.stop>
                     <div class="d-flex gap-2 justify-end">
                       <button class="btn btn-sm btn-outline" @click="editVendor(vendor)" title="Edit">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -227,7 +227,7 @@
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                     <span>Click to upload</span>
                   </div>
-                  <input ref="vendorImgInput" type="file" accept="image/*" style="display:none" @change="handleImageSelect" />
+                  <input ref="vendorImgInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" @change="handleImageSelect" />
                 </div>
               </div>
               <div class="form-group">
@@ -320,7 +320,8 @@ export default {
     const router = useRouter()
     
     const searchQuery = ref('')
-    const selectedCategory = ref('')
+    const categoryFilter = ref('')
+    const categories = ref([])
     const showAddModal = ref(false)
     const showEditModal = ref(false)
     const editingVendorId = ref(null)
@@ -350,7 +351,7 @@ export default {
     const loading = computed(() => store.getters['vendors/vendorsLoading'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const canManage = computed(() => ['admin', 'manager'].includes(currentUser.value?.role))
-    const total = computed(() => store.getters['vendorTotal'])
+    const total = computed(() => store.getters['vendors/vendorTotal'])
     const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
     
     let searchTimeout = null
@@ -742,6 +743,18 @@ export default {
   
   .search-box .form-control {
     width: 100%;
+  }
+
+  .filters select {
+    width: 100% !important;
+  }
+
+  .row [class*="col-"] {
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 22px;
   }
 }
 </style>

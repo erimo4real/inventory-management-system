@@ -16,6 +16,7 @@ import * as entityImageController from '../controllers/entityImageController.js'
 import { initializeSystem } from '../controllers/setupController.js';
 import { authenticate, authorize, requireSite, ROLES } from '../middleware/auth.js';
 import AuditService from '../services/AuditService.js';
+import * as aiController from '../controllers/aiController.js';
 import { validateProduct, validateSupplier, validateInventory, validateEntityInput, validateCategory, validateSite, validateSiteUser } from '../middleware/validation.js';
 
 const router = express.Router();
@@ -138,5 +139,11 @@ router.get('/reports/users', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER),
 router.get('/reports/trends', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getMonthlyTrends);
 router.get('/reports/complete', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.getCompleteReport);
 router.get('/reports/export', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), reportController.exportReport);
+
+// ========== AI Insights (Require Site) ==========
+router.get('/ai/predictions', requireSite, aiController.getPredictions);
+router.get('/ai/forecast/:productId', requireSite, aiController.getDemandForecast);
+router.get('/ai/anomalies', requireSite, authorize(ROLES.ADMIN, ROLES.MANAGER), aiController.getAnomalies);
+router.post('/ai/suggest-category', requireSite, aiController.suggestCategory);
 
 export default router;

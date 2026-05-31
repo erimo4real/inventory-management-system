@@ -655,26 +655,16 @@ export default {
   }
   
   .auth-side.left-side {
-    flex: none;
-    padding: 40px;
-    min-height: auto;
+    display: none;
   }
   
-  .side-text h1 {
-    font-size: 28px;
+  .auth-side.right-side {
+    flex: 1;
+    padding: 60px 32px;
   }
   
   .features-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-  
-  .feature-card {
-    padding: 12px;
-  }
-  
-  .brand-logo {
-    margin-bottom: 24px;
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .side-text {
@@ -686,9 +676,13 @@ export default {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .features-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
+  }
+
+  .login-card {
+    padding: 24px 16px;
   }
 }
 </style>
