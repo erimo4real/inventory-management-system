@@ -49,14 +49,6 @@ const actions = {
     try {
       const response = await api.post('/auth/login', { email, password, remember })
       const { user } = response.data
-      const expires = remember ? 7 : 1
-      const isProduction = window.location.protocol === 'https:'
-      const cookieOptions = { expires, sameSite: 'Strict', secure: isProduction }
-      Cookies.set('auth_status', '1', cookieOptions)
-      Cookies.set('user_role', user.role, cookieOptions)
-      if (user.site_id) {
-        Cookies.set('site_id', user.site_id, cookieOptions)
-      }
       commit('SET_USER', user)
       await dispatch('sites/initializeSite', null, { root: true })
       return user
@@ -75,13 +67,6 @@ const actions = {
     try {
       const response = await api.post('/auth/register', userData)
       const { user } = response.data
-      const isProduction = window.location.protocol === 'https:'
-      const cookieOptions = { expires: 7, sameSite: 'Strict', secure: isProduction }
-      Cookies.set('auth_status', '1', cookieOptions)
-      Cookies.set('user_role', user.role, cookieOptions)
-      if (user.site_id) {
-        Cookies.set('site_id', user.site_id, cookieOptions)
-      }
       commit('SET_USER', user)
       return response.data
     } catch (error) {
@@ -100,11 +85,6 @@ const actions = {
       commit('SET_USER', response.data)
       return response.data
     } catch (error) {
-      const isProduction = window.location.protocol === 'https:'
-      const opts = { sameSite: 'Strict', secure: isProduction }
-      Cookies.remove('auth_status', opts)
-      Cookies.remove('user_role', opts)
-      Cookies.remove('site_id', opts)
       commit('CLEAR_AUTH')
       throw error
     } finally {
@@ -129,11 +109,6 @@ const actions = {
     } catch (err) {
       console.warn('[AuthStore] Logout API call failed, clearing local state anyway:', err.message)
     }
-    const isProduction = window.location.protocol === 'https:'
-    const opts = { sameSite: 'Strict', secure: isProduction }
-    Cookies.remove('auth_status', opts)
-    Cookies.remove('user_role', opts)
-    Cookies.remove('site_id', opts)
     commit('CLEAR_AUTH')
   },
 
@@ -147,17 +122,8 @@ const actions = {
       try {
         const response = await api.get('/auth/me')
         commit('SET_USER', response.data)
-        const user = response.data
-        if (user.site_id) {
-          const isProduction = window.location.protocol === 'https:'
-          Cookies.set('site_id', user.site_id, { expires: 7, sameSite: 'Strict', secure: isProduction })
-        }
       } catch {
-        const isProduction = window.location.protocol === 'https:'
-        const opts = { sameSite: 'Strict', secure: isProduction }
-        Cookies.remove('auth_status', opts)
-        Cookies.remove('user_role', opts)
-        Cookies.remove('site_id', opts)
+        commit('CLEAR_AUTH')
       }
     }
   }

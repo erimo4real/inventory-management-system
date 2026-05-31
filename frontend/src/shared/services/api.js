@@ -30,11 +30,6 @@ api.interceptors.response.use(
                           error.config?.url?.includes('/auth/logout')
 
     if (error.response?.status === 401 && !isAuthRequest) {
-      const isProduction = window.location.protocol === 'https:'
-      const opts = { sameSite: 'Strict', secure: isProduction }
-      Cookies.remove('auth_status', opts)
-      Cookies.remove('user_role', opts)
-      Cookies.remove('site_id', opts)
       window.dispatchEvent(new CustomEvent('auth:unauthorized'))
     }
     return Promise.reject(error)
