@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { reactive, toRefs } from 'vue'
 
 const state = reactive({
   visible: false,
@@ -54,7 +54,7 @@ export default {
       fns.forEach(fn => fn(false))
       close()
     }
-    return { ...state, handleConfirm, handleCancel }
+    return { ...toRefs(state), handleConfirm, handleCancel }
   }
 }
 </script>

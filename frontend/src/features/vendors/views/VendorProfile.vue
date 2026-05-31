@@ -1,4 +1,5 @@
 <template>
+  <AppLayout>
   <div class="vendor-profile-page">
     <div class="back-link">
       <router-link to="/vendors" class="back-btn">← Back to Vendors</router-link>
@@ -164,6 +165,7 @@
       </div>
     </div>
   </div>
+  </AppLayout>
 </template>
 
 <script>

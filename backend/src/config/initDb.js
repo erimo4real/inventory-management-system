@@ -184,6 +184,7 @@ const initDb = async () => {
 
     // Migrate existing VARCHAR(500) image columns to TEXT
     await client.query(`ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT`);
+    await client.query(`ALTER TABLE products ALTER COLUMN image_url TYPE TEXT`);
     await client.query(`ALTER TABLE suppliers ALTER COLUMN image_url TYPE TEXT`);
     await client.query(`ALTER TABLE clients ALTER COLUMN image_url TYPE TEXT`);
     await client.query(`ALTER TABLE vendors ALTER COLUMN image_url TYPE TEXT`);

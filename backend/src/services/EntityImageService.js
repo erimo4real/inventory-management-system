@@ -1,9 +1,26 @@
+import fs from 'fs';
 import UploadService from './UploadService.js';
 import ProductRepository from '../repositories/ProductRepository.js';
 import SupplierRepository from '../repositories/SupplierRepository.js';
 import ClientRepository from '../repositories/ClientRepository.js';
 import VendorRepository from '../repositories/VendorRepository.js';
 import SiteRepository from '../repositories/SiteRepository.js';
+
+const MAGIC_BYTES = {
+  'image/jpeg': [0xFF, 0xD8, 0xFF],
+  'image/png': [0x89, 0x50, 0x4E, 0x47],
+  'image/gif': [0x47, 0x49, 0x46],
+  'image/webp': [0x52, 0x49, 0x46, 0x46]
+};
+
+function validateMagicBytes(buffer, mimeType) {
+  const expected = MAGIC_BYTES[mimeType];
+  if (!expected) return false;
+  for (let i = 0; i < expected.length; i++) {
+    if (buffer[i] !== expected[i]) return false;
+  }
+  return true;
+}
 
 const repos = {
   product: { repo: new ProductRepository(), urlField: 'image_url', pubField: 'image_public_id', folder: 'products' },
@@ -18,6 +35,14 @@ export default class EntityImageService {
     const config = repos[entityType];
     if (!config) {
       const error = new Error(`Unknown entity type: ${entityType}`);
+      error.status = 400;
+      throw error;
+    }
+
+    const buffer = fs.readFileSync(file.path);
+    if (!validateMagicBytes(buffer, file.mimetype)) {
+      fs.unlinkSync(file.path);
+      const error = new Error('Invalid file content');
       error.status = 400;
       throw error;
     }

@@ -1,4 +1,5 @@
 <template>
+  <AppLayout>
   <div class="client-profile-page">
     <div class="back-link">
       <router-link to="/clients" class="back-btn">← Back to Clients</router-link>
@@ -137,6 +138,7 @@
       </div>
     </div>
   </div>
+  </AppLayout>
 </template>
 
 <script>

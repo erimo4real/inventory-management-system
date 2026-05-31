@@ -31,7 +31,6 @@
               type="text" 
               class="form-control" 
               placeholder="Search sites..."
-              @input="handleSearch"
             />
           </div>
         </div>
@@ -292,9 +291,6 @@ export default {
       )
     })
     
-    const handleSearch = () => {
-    }
-    
     const fetchSites = async () => {
       try {
         await store.dispatch('sites/fetchSites')
@@ -428,7 +424,6 @@ export default {
       loading,
       filteredSites,
       selectedSite,
-      handleSearch,
       formatDate,
       editSite,
       viewSiteDetails,
