@@ -1,9 +1,27 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
+import { URL } from 'url';
 
 dotenv.config();
 
 const { Pool } = pg;
+
+function parseDbUrl(url) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return {
+      host: parsed.hostname,
+      port: parseInt(parsed.port) || 5432,
+      database: parsed.pathname.replace(/^\//, ''),
+      user: decodeURIComponent(parsed.username),
+      password: decodeURIComponent(parsed.password),
+      ssl: process.env.DB_SSL !== 'false' ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' } : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
 
 const poolConfig = {
   max: 20,
@@ -13,13 +31,11 @@ const poolConfig = {
 };
 
 if (process.env.DATABASE_URL) {
-  poolConfig.connectionString = process.env.DATABASE_URL;
-  // Supabase requires SSL. Enable by default when using DATABASE_URL.
-  // Override with DB_SSL=false to disable.
-  // Set DB_SSL_REJECT_UNAUTHORIZED=true to enforce certificate validation.
-  if (process.env.DB_SSL !== 'false') {
-    const rejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true';
-    poolConfig.ssl = { rejectUnauthorized };
+  const parsed = parseDbUrl(process.env.DATABASE_URL);
+  if (parsed) {
+    Object.assign(poolConfig, parsed);
+  } else {
+    poolConfig.connectionString = process.env.DATABASE_URL;
   }
 } else {
   poolConfig.host = process.env.DB_HOST || 'localhost';
@@ -27,10 +43,8 @@ if (process.env.DATABASE_URL) {
   poolConfig.database = process.env.DB_NAME || 'inventory_db';
   poolConfig.user = process.env.DB_USER || 'postgres';
   poolConfig.password = process.env.DB_PASSWORD || 'postgres';
-  // Enable SSL explicitly with DB_SSL=true
   if (process.env.DB_SSL === 'true') {
-    const rejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true';
-    poolConfig.ssl = { rejectUnauthorized };
+    poolConfig.ssl = { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' };
   }
 }
 
