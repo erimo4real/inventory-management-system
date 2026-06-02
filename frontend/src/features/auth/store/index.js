@@ -116,12 +116,13 @@ const actions = {
     commit('CLEAR_ERROR')
   },
 
-  async initAuth({ commit }) {
+  async initAuth({ commit, dispatch }) {
     const authStatus = Cookies.get('auth_status')
     if (authStatus) {
       try {
         const response = await api.get('/auth/me')
         commit('SET_USER', response.data)
+        await dispatch('sites/initializeSite', null, { root: true })
       } catch {
         const isProduction = window.location.protocol === 'https:'
         const opts = { sameSite: 'strict', secure: isProduction, path: '/' }
