@@ -9,6 +9,7 @@ const poolConfig = {
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
+  family: 4,
 };
 
 if (process.env.DATABASE_URL) {
