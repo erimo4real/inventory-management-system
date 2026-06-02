@@ -6,6 +6,14 @@ export const errorHandler = (err, req, res, next) => {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
   
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: 'File size must be under 5MB' });
+  }
+
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json({ error: 'Unexpected file field' });
+  }
+
   if (err.code === '23505') {
     return res.status(400).json({ error: 'Duplicate entry' });
   }

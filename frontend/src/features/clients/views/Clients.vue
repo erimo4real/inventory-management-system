@@ -363,6 +363,7 @@ export default {
       try {
         await store.dispatch('clients/deleteClient', clientId)
         showSuccess('Client deleted successfully')
+        fetchClients()
         fetchStats()
       } catch (error) {
         showError('Failed to delete client')
@@ -387,45 +388,48 @@ export default {
     }
 
     const handleSubmit = async () => {
+      let newClient = null
       submitting.value = true
       try {
         if (showEditModal.value) {
-          if (imageFile.value) {
-            const fd = new FormData()
-            fd.append('image', imageFile.value)
-            const res = await api.put(`/clients/${editingClientId.value}/image`, fd, {
-              headers: { 'Content-Type': 'multipart/form-data' }
-            })
-            form.value.image_url = res.data.url
-          }
           await store.dispatch('clients/updateClient', {
             id: editingClientId.value,
             data: form.value
           })
           showSuccess('Client updated successfully')
         } else {
-          const newClient = await store.dispatch('clients/createClient', form.value)
-          if (imageFile.value) {
-            const fd = new FormData()
-            fd.append('image', imageFile.value)
-            const res = await api.put(`/clients/${newClient.id}/image`, fd, {
-              headers: { 'Content-Type': 'multipart/form-data' }
-            })
-            await store.dispatch('clients/updateClient', {
-              id: newClient.id,
-              data: { image_url: res.data.url }
-            })
-          }
+          const payload = { ...form.value }
+          delete payload.image_url
+          newClient = await store.dispatch('clients/createClient', payload)
           showSuccess('Client created successfully')
         }
-        closeModal()
-        fetchClients()
-        fetchStats()
       } catch (error) {
         showError(error.response?.data?.error || error.response?.data?.detail || 'Operation failed')
-      } finally {
         submitting.value = false
+        return
       }
+
+      if (imageFile.value) {
+        const entityId = showEditModal.value ? editingClientId.value : newClient.id
+        try {
+          const fd = new FormData()
+          fd.append('image', imageFile.value)
+          const res = await api.put(`/clients/${entityId}/image`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          await store.dispatch('clients/updateClient', {
+            id: entityId,
+            data: { image_url: res.data.url }
+          })
+        } catch {
+          showError('Image upload failed')
+        }
+      }
+
+      closeModal()
+      fetchClients()
+      fetchStats()
+      submitting.value = false
     }
     
     const closeModal = () => {

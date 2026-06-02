@@ -331,6 +331,7 @@ export default {
       try {
         await store.dispatch('products/deleteProduct', productId)
         showSuccess('Product deleted successfully')
+        fetchProducts()
       } catch (error) {
         showError('Failed to delete product')
       }
@@ -363,13 +364,10 @@ export default {
     }
 
     const handleSubmit = async () => {
+      let newProduct = null
       submitting.value = true
       try {
         if (showEditModal.value) {
-          if (imageFile.value) {
-            const url = await uploadImageToEntity('products', editingProductId.value, imageFile.value)
-            form.value.image_url = url
-          }
           await store.dispatch('products/updateProduct', {
             id: editingProductId.value,
             data: form.value
@@ -377,24 +375,32 @@ export default {
           showSuccess('Product updated successfully')
         } else {
           const payload = { ...form.value }
-          if (imageFile.value) {
-            const fd = new FormData()
-            fd.append('image', imageFile.value)
-            const uploadRes = await api.post('/upload/image', fd, {
-              headers: { 'Content-Type': 'multipart/form-data' }
-            })
-            payload.image_url = uploadRes.data.url
-          }
-          await store.dispatch('products/createProduct', payload)
+          delete payload.image_url
+          newProduct = await store.dispatch('products/createProduct', payload)
           showSuccess('Product created successfully')
         }
-        closeModal()
-        fetchProducts()
       } catch (error) {
         showError(error.response?.data?.error || error.response?.data?.detail || 'Operation failed')
-      } finally {
         submitting.value = false
+        return
       }
+
+      if (imageFile.value) {
+        const entityId = showEditModal.value ? editingProductId.value : newProduct.id
+        try {
+          const url = await uploadImageToEntity('products', entityId, imageFile.value)
+          await store.dispatch('products/updateProduct', {
+            id: entityId,
+            data: { image_url: url }
+          })
+        } catch {
+          showError('Image upload failed')
+        }
+      }
+
+      closeModal()
+      fetchProducts()
+      submitting.value = false
     }
     
     const closeModal = () => {

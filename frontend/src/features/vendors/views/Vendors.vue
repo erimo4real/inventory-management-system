@@ -425,6 +425,7 @@ export default {
       try {
         await store.dispatch('vendors/deleteVendor', vendorId)
         showSuccess('Vendor deleted successfully')
+        fetchVendors()
         fetchStats()
       } catch (error) {
         showError('Failed to delete vendor')
@@ -449,46 +450,49 @@ export default {
     }
 
     const handleSubmit = async () => {
+      let newVendor = null
       submitting.value = true
       try {
         if (showEditModal.value) {
-          if (imageFile.value) {
-            const fd = new FormData()
-            fd.append('image', imageFile.value)
-            const res = await api.put(`/vendors/${editingVendorId.value}/image`, fd, {
-              headers: { 'Content-Type': 'multipart/form-data' }
-            })
-            form.value.image_url = res.data.url
-          }
           await store.dispatch('vendors/updateVendor', {
             id: editingVendorId.value,
             data: form.value
           })
           showSuccess('Vendor updated successfully')
         } else {
-          const newVendor = await store.dispatch('vendors/createVendor', form.value)
-          if (imageFile.value) {
-            const fd = new FormData()
-            fd.append('image', imageFile.value)
-            const res = await api.put(`/vendors/${newVendor.id}/image`, fd, {
-              headers: { 'Content-Type': 'multipart/form-data' }
-            })
-            await store.dispatch('vendors/updateVendor', {
-              id: newVendor.id,
-              data: { image_url: res.data.url }
-            })
-          }
+          const payload = { ...form.value }
+          delete payload.image_url
+          newVendor = await store.dispatch('vendors/createVendor', payload)
           showSuccess('Vendor created successfully')
         }
-        closeModal()
-        fetchVendors()
-        fetchStats()
-        fetchCategories()
       } catch (error) {
         showError(error.response?.data?.error || error.response?.data?.detail || 'Operation failed')
-      } finally {
         submitting.value = false
+        return
       }
+
+      if (imageFile.value) {
+        const entityId = showEditModal.value ? editingVendorId.value : newVendor.id
+        try {
+          const fd = new FormData()
+          fd.append('image', imageFile.value)
+          const res = await api.put(`/vendors/${entityId}/image`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          await store.dispatch('vendors/updateVendor', {
+            id: entityId,
+            data: { image_url: res.data.url }
+          })
+        } catch {
+          showError('Image upload failed')
+        }
+      }
+
+      closeModal()
+      fetchVendors()
+      fetchStats()
+      fetchCategories()
+      submitting.value = false
     }
     
     const closeModal = () => {

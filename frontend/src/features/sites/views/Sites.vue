@@ -357,42 +357,43 @@ export default {
     }
 
     const handleSubmit = async () => {
+      let newSite = null
       try {
         if (showEditModal.value) {
-          if (imageFile.value) {
-            const fd = new FormData()
-            fd.append('image', imageFile.value)
-            const res = await api.put(`/sites/${editingSiteId.value}/logo`, fd, {
-              headers: { 'Content-Type': 'multipart/form-data' }
-            })
-            form.value.logo_url = res.data.url
-          }
           await store.dispatch('sites/updateSite', {
             id: editingSiteId.value,
-            data: form.value
+            data: { name: form.value.name, slug: form.value.slug, email: form.value.email, phone: form.value.phone, address: form.value.address }
           })
           showSuccess('Site updated successfully')
         } else {
           const { logo_url, ...createData } = form.value
-          const newSite = await store.dispatch('sites/createSite', createData)
-          if (imageFile.value) {
-            const fd = new FormData()
-            fd.append('image', imageFile.value)
-            const res = await api.put(`/sites/${newSite.id}/logo`, fd, {
-              headers: { 'Content-Type': 'multipart/form-data' }
-            })
-            await store.dispatch('sites/updateSite', {
-              id: newSite.id,
-              data: { logo_url: res.data.url }
-            })
-          }
+          newSite = await store.dispatch('sites/createSite', createData)
           showSuccess('Site created successfully')
         }
-        closeModal()
-        fetchSites()
       } catch (error) {
         showError(error.response?.data?.error || error.response?.data?.detail || 'Operation failed')
+        return
       }
+
+      if (imageFile.value) {
+        const entityId = showEditModal.value ? editingSiteId.value : newSite.id
+        try {
+          const fd = new FormData()
+          fd.append('image', imageFile.value)
+          const res = await api.put(`/sites/${entityId}/logo`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          await store.dispatch('sites/updateSite', {
+            id: entityId,
+            data: { logo_url: res.data.url }
+          })
+        } catch {
+          showError('Logo upload failed')
+        }
+      }
+
+      closeModal()
+      fetchSites()
     }
     
     const closeModal = () => {
