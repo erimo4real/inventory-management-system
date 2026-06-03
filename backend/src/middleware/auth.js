@@ -98,7 +98,7 @@ export const requireSite = async (req, res, next) => {
     return res.status(400).json({ error: 'Site ID is required. Include x-site-id header or site_id query parameter.' });
   }
 
-  if (req.user) {
+  if (req.user && req.user.role !== ROLES.ADMIN) {
     try {
       const result = await pool.query(
         'SELECT 1 FROM user_sites WHERE user_id = $1 AND site_id = $2 AND is_active = true',
