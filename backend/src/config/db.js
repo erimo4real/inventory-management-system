@@ -1,57 +1,77 @@
-import pg from 'pg';
+import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-import { URL } from 'url';
 
 dotenv.config();
 
-const { Pool } = pg;
+const MAX_PARAMS = 10;
 
-function parseDbUrl(url) {
-  if (!url) return null;
-  try {
-    const parsed = new URL(url);
-    return {
-      host: parsed.hostname,
-      port: parseInt(parsed.port) || 5432,
-      database: parsed.pathname.replace(/^\//, ''),
-      user: decodeURIComponent(parsed.username),
-      password: decodeURIComponent(parsed.password),
-      ssl: process.env.DB_SSL !== 'false' ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' } : undefined,
-    };
-  } catch {
-    return null;
+function buildRpcArgs(sql, params = []) {
+  const args = { query_text: sql };
+  for (let i = 0; i < Math.min(params.length, MAX_PARAMS); i++) {
+    args[`p${i + 1}`] = params[i] == null ? null : String(params[i]);
   }
+  return args;
 }
 
-const poolConfig = {
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-  family: 4,
+let _rpcClient = null;
+
+function getClient() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set');
+  }
+
+  if (!_rpcClient) {
+    _rpcClient = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+  return _rpcClient;
+}
+
+async function executeRpc(sql, params) {
+  const supabase = getClient();
+  const args = buildRpcArgs(sql, params);
+
+  const { data, error } = await supabase.rpc('execute_sql', args);
+
+  if (error) {
+    const err = new Error(error.message);
+    err.code = error.code;
+    throw err;
+  }
+
+  // Non-returning query (INSERT/UPDATE/DELETE without RETURNING)
+  if (data && typeof data === 'object' && data.rowCount !== undefined) {
+    return { rows: [], rowCount: data.rowCount };
+  }
+
+  // Returning query (SELECT / INSERT ... RETURNING)
+  const rows = Array.isArray(data) ? data : [];
+  return { rows, rowCount: rows.length };
+}
+
+function createClientProxy() {
+  let released = false;
+  return {
+    query: async (sql, params) => {
+      if (released) throw new Error('Client already released');
+      const upper = typeof sql === 'string' ? sql.trim().toUpperCase() : '';
+      if (upper === 'BEGIN' || upper === 'COMMIT' || upper === 'ROLLBACK') {
+        return { rows: [], rowCount: 0 };
+      }
+      return executeRpc(sql, params);
+    },
+    release: () => { released = true; },
+  };
+}
+
+export const pool = {
+  query: async (sql, params) => executeRpc(sql, params),
+  connect: async () => createClientProxy(),
+  on: () => {}, // no-op for error handler compatibility
 };
-
-if (process.env.DATABASE_URL) {
-  const parsed = parseDbUrl(process.env.DATABASE_URL);
-  if (parsed) {
-    Object.assign(poolConfig, parsed);
-  } else {
-    poolConfig.connectionString = process.env.DATABASE_URL;
-  }
-} else {
-  poolConfig.host = process.env.DB_HOST || 'localhost';
-  poolConfig.port = parseInt(process.env.DB_PORT) || 5432;
-  poolConfig.database = process.env.DB_NAME || 'inventory_db';
-  poolConfig.user = process.env.DB_USER || 'postgres';
-  poolConfig.password = process.env.DB_PASSWORD || 'postgres';
-  if (process.env.DB_SSL === 'true') {
-    poolConfig.ssl = { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' };
-  }
-}
-
-export const pool = new Pool(poolConfig);
-
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-});
 
 export default pool;
