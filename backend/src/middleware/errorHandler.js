@@ -25,7 +25,7 @@ export const errorHandler = (err, req, res, next) => {
   const status = err.status || 500;
 
   res.status(status).json({
-    error: status >= 500 ? 'Internal server error' : 'Bad request'
+    error: status >= 500 ? err.message || 'Internal server error' : 'Bad request'
   });
 };
 
