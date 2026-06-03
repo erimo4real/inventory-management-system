@@ -10,7 +10,7 @@ export const register = async (req, res, next) => {
     const result = await AuthService.register(req.body);
     const isProduction = process.env.NODE_ENV === 'production';
     const maxAge = 24 * 60 * 60 * 1000;
-    const baseOpts = { secure: isProduction, sameSite: 'strict', path: '/' };
+    const baseOpts = { secure: isProduction, sameSite: isProduction ? 'none' : 'lax', path: '/' };
     res.cookie('token', result.token, { ...baseOpts, httpOnly: true, maxAge });
     res.cookie('auth_status', '1', { ...baseOpts, maxAge });
     res.cookie('user_role', result.user.role, { ...baseOpts, maxAge });
@@ -31,7 +31,7 @@ export const login = async (req, res, next) => {
     const result = await AuthService.login(email, password, remember);
     const maxAge = remember ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
     const isProduction = process.env.NODE_ENV === 'production';
-    const baseOpts = { secure: isProduction, sameSite: 'strict', path: '/' };
+    const baseOpts = { secure: isProduction, sameSite: isProduction ? 'none' : 'lax', path: '/' };
     res.cookie('token', result.token, { ...baseOpts, httpOnly: true, maxAge });
     res.cookie('auth_status', '1', { ...baseOpts, maxAge });
     res.cookie('user_role', result.user.role, { ...baseOpts, maxAge });
@@ -84,7 +84,7 @@ export const forgotPassword = async (req, res, next) => {
 export const logout = async (req, res, next) => {
   try {
     const isProduction = process.env.NODE_ENV === 'production';
-    const baseOpts = { secure: isProduction, sameSite: 'strict', path: '/' };
+    const baseOpts = { secure: isProduction, sameSite: isProduction ? 'none' : 'lax', path: '/' };
     res.cookie('token', '', { ...baseOpts, httpOnly: true, maxAge: 0 });
     res.cookie('auth_status', '', { ...baseOpts, maxAge: 0 });
     res.cookie('user_role', '', { ...baseOpts, maxAge: 0 });
