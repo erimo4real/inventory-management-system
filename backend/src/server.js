@@ -92,16 +92,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Temporary debug route - remove after fixing
-app.get('/api/debug', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT COUNT(*) as count FROM users');
-    res.json({ success: true, rowCount: result.rowCount, rows: result.rows });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message, code: err.code, stack: err.stack });
-  }
-});
-
 app.use('/api', apiRoutes);
 
 app.use(notFound);

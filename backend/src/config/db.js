@@ -2,12 +2,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-function buildRpcBody(sql, params = []) {
-  const body = { query_text: sql };
-  for (let i = 0; i < Math.min(params.length, 10); i++) {
-    body[`p${i + 1}`] = params[i] == null ? null : String(params[i]);
+function buildSql(sql, params) {
+  if (!params || params.length === 0) return sql;
+  let result = sql;
+  for (let i = 0; i < params.length; i++) {
+    const value = params[i];
+    let replacement;
+    if (value === null || value === undefined) {
+      replacement = 'NULL';
+    } else if (typeof value === 'number') {
+      replacement = String(value);
+    } else if (typeof value === 'boolean') {
+      replacement = value ? 'true' : 'false';
+    } else {
+      replacement = "'" + String(value).replace(/'/g, "''") + "'";
+    }
+    result = result.replace(new RegExp(`\\$${i + 1}(?![0-9])`, 'g'), replacement);
   }
-  return body;
+  return result;
 }
 
 let _url = null;
@@ -27,7 +39,7 @@ function getEndpoint() {
 
 async function executeRpc(sql, params) {
   const { url, key } = getEndpoint();
-  const body = buildRpcBody(sql, params);
+  const finalSql = buildSql(sql, params);
 
   const res = await fetch(url, {
     method: 'POST',
@@ -36,7 +48,7 @@ async function executeRpc(sql, params) {
       'apikey': key,
       'Authorization': `Bearer ${key}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ query_text: finalSql }),
   });
 
   if (!res.ok) {
