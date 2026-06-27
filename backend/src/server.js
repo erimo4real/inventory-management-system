@@ -92,6 +92,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/debug', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT 1 as test');
+    res.json({ success: true, db: 'ok', result });
+  } catch (err) {
+    res.json({ success: false, message: err.message, code: err.code, name: err.name });
+  }
+});
+
 app.use('/api', apiRoutes);
 
 app.use(notFound);
