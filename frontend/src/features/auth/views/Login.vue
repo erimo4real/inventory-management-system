@@ -274,6 +274,32 @@
             </button>
           </form>
 
+          <div class="demo-box">
+            <div class="demo-box-header">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              Demo Credentials
+            </div>
+            <div class="demo-box-body">
+              <div class="demo-row">
+                <span class="demo-label">Email:</span>
+                <span class="demo-value" @click="fillDemo('admin@example.com', 'admin123')">admin@example.com</span>
+                <button class="demo-copy" @click="copyToClipboard('admin@example.com')" title="Copy email">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+              </div>
+              <div class="demo-row">
+                <span class="demo-label">Password:</span>
+                <span class="demo-value" @click="fillDemo('admin@example.com', 'admin123')">admin123</span>
+                <button class="demo-copy" @click="copyToClipboard('admin123')" title="Copy password">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+              </div>
+              <button class="demo-fill-btn" @click="fillDemo('admin@example.com', 'admin123')">Auto-fill & Sign in</button>
+            </div>
+          </div>
+
           <div class="auth-footer">
             <p>New on our platform? <router-link to="/register" class="link">Create an account</router-link></p>
           </div>
@@ -310,6 +336,16 @@ export default {
         store.dispatch('auth/clearError')
       }
     }
+
+    const fillDemo = (email, password) => {
+      form.value.email = email
+      form.value.password = password
+      form.value.remember = true
+    }
+
+    const copyToClipboard = (text) => {
+      navigator.clipboard.writeText(text)
+    }
     
     const handleSubmit = async () => {
       try {
@@ -330,6 +366,8 @@ export default {
       loading,
       error,
       clearError,
+      fillDemo,
+      copyToClipboard,
       handleSubmit
     }
   }
@@ -646,6 +684,94 @@ export default {
 .link {
   color: var(--primary-color);
   font-weight: 500;
+}
+
+/* Demo Box */
+.demo-box {
+  background: #f8f7ff;
+  border: 1px solid #e8e6ff;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.demo-box-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.demo-box-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.demo-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.demo-label {
+  color: var(--gray-500);
+  min-width: 58px;
+}
+
+.demo-value {
+  color: var(--gray-800);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  background: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--gray-200);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.demo-value:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.demo-copy {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.demo-copy:hover {
+  color: var(--primary-color);
+}
+
+.demo-fill-btn {
+  margin-top: 4px;
+  padding: 8px 16px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.demo-fill-btn:hover {
+  background: var(--primary-dark);
 }
 
 /* Responsive */
