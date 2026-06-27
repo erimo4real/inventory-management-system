@@ -94,10 +94,21 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/debug', async (req, res) => {
   try {
+    const dns = await import('dns');
+    let dnsInfo = {};
+    try {
+      const addrs = await dns.promises.resolve4('hbmuyidbjcymuavmanbm.supabase.co');
+      dnsInfo.ipv4 = addrs;
+    } catch (e) { dnsInfo.ipv4Error = e.code; }
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const hasKey = !!(process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const nodeEnv = process.env.NODE_ENV;
+    
     const result = await pool.query('SELECT 1 as test');
-    res.json({ success: true, db: 'ok', result });
+    res.json({ success: true, db: 'ok', result, dns: dnsInfo, supabaseUrl, hasKey, nodeEnv });
   } catch (err) {
-    res.json({ success: false, message: err.message, code: err.code, name: err.name });
+    res.json({ success: false, message: err.message, code: err.code, name: err.name, stack: err.stack?.split('\n')[0], supabaseUrl: process.env.SUPABASE_URL, hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY, nodeEnv: process.env.NODE_ENV });
   }
 });
 
