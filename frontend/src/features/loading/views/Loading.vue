@@ -13,6 +13,7 @@
 <script>
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { onMounted } from 'vue'
 
 export default {
   name: 'LoadingScreen',
@@ -20,14 +21,21 @@ export default {
     const store = useStore()
     const router = useRouter()
 
-    const user = store.getters['auth/currentUser']
-    const hasCookie = store.getters['auth/hasAuthCookie']
+    onMounted(async () => {
+      const user = store.getters['auth/currentUser']
 
-    if (user) {
-      router.replace('/')
-    } else if (!hasCookie) {
-      router.replace('/login')
-    }
+      if (user) {
+        router.replace('/')
+        return
+      }
+
+      try {
+        await store.dispatch('auth/initAuth')
+        router.replace('/')
+      } catch {
+        router.replace('/login')
+      }
+    })
 
     return {}
   }

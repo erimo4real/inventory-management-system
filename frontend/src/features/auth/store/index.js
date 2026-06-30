@@ -1,9 +1,4 @@
 import api from '@/shared/services/api'
-import Cookies from 'js-cookie'
-
-function hasAuthCookie() {
-  return !!Cookies.get('auth_status')
-}
 
 const state = {
   user: null,
@@ -19,8 +14,7 @@ const getters = {
   isStaff: state => state.user?.role === 'staff',
   authLoading: state => state.loading,
   authError: state => state.error,
-  currentSiteId: state => state.user?.site_id,
-  hasAuthCookie: () => hasAuthCookie()
+  currentSiteId: state => state.user?.site_id
 }
 
 const mutations = {
@@ -117,20 +111,12 @@ const actions = {
   },
 
   async initAuth({ commit, dispatch }) {
-    const authStatus = Cookies.get('auth_status')
-    if (authStatus) {
-      try {
-        const response = await api.get('/auth/me')
-        commit('SET_USER', response.data)
-        await dispatch('sites/initializeSite', null, { root: true })
-      } catch {
-        const isProduction = window.location.protocol === 'https:'
-        const opts = { sameSite: 'strict', secure: isProduction, path: '/' }
-        Cookies.remove('auth_status', opts)
-        Cookies.remove('user_role', opts)
-        Cookies.remove('site_id', opts)
-        commit('CLEAR_AUTH')
-      }
+    try {
+      const response = await api.get('/auth/me')
+      commit('SET_USER', response.data)
+      await dispatch('sites/initializeSite', null, { root: true })
+    } catch {
+      commit('CLEAR_AUTH')
     }
   }
 }

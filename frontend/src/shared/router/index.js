@@ -122,11 +122,10 @@ router.beforeEach((to, from, next) => {
   const user = store.getters['auth/currentUser']
 
   if (to.meta.requiresAuth && !user) {
-    const hasCookie = store.getters['auth/hasAuthCookie']
-    if (hasCookie && to.path !== '/loading') {
+    if (to.path !== '/loading') {
       next('/loading')
     } else {
-      next('/login')
+      next()
     }
   } else if (to.path === '/login' && user) {
     next('/')
