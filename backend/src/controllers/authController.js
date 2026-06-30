@@ -12,11 +12,6 @@ export const register = async (req, res, next) => {
     const maxAge = 24 * 60 * 60 * 1000;
     const baseOpts = { secure: isProduction, sameSite: isProduction ? 'none' : 'lax', path: '/' };
     res.cookie('token', result.token, { ...baseOpts, httpOnly: true, maxAge });
-    res.cookie('auth_status', '1', { ...baseOpts, maxAge });
-    res.cookie('user_role', result.user.role, { ...baseOpts, maxAge });
-    if (result.user.site_id) {
-      res.cookie('site_id', result.user.site_id, { ...baseOpts, maxAge });
-    }
     res.status(201).json({ user: result.user });
   } catch (err) {
     console.error('[AuthController register] ERROR:', err.message);
@@ -33,11 +28,6 @@ export const login = async (req, res, next) => {
     const isProduction = process.env.NODE_ENV === 'production';
     const baseOpts = { secure: isProduction, sameSite: isProduction ? 'none' : 'lax', path: '/' };
     res.cookie('token', result.token, { ...baseOpts, httpOnly: true, maxAge });
-    res.cookie('auth_status', '1', { ...baseOpts, maxAge });
-    res.cookie('user_role', result.user.role, { ...baseOpts, maxAge });
-    if (result.user.site_id) {
-      res.cookie('site_id', result.user.site_id, { ...baseOpts, maxAge });
-    }
     res.json({ user: result.user });
   } catch (err) {
     console.error('[AuthController login] ERROR:', err.message);
@@ -86,9 +76,6 @@ export const logout = async (req, res, next) => {
     const isProduction = process.env.NODE_ENV === 'production';
     const baseOpts = { secure: isProduction, sameSite: isProduction ? 'none' : 'lax', path: '/' };
     res.cookie('token', '', { ...baseOpts, httpOnly: true, maxAge: 0 });
-    res.cookie('auth_status', '', { ...baseOpts, maxAge: 0 });
-    res.cookie('user_role', '', { ...baseOpts, maxAge: 0 });
-    res.cookie('site_id', '', { ...baseOpts, maxAge: 0 });
     res.json({ message: 'Logged out successfully' });
   } catch (err) {
     next(err);
